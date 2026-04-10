@@ -1,11 +1,6 @@
 import sys
 from enum import Enum
 
-map_data: dict = {
-    "hub": [],
-    "connection": [],
-}
-
 
 class ZoneType(Enum):
     Normal = "normal"
@@ -57,46 +52,48 @@ def parse_metadata(metadata: str) -> dict:
         raise ValueError("Metadata not valid")
     metadata = metadata.strip("[]")
     for data in metadata.split(" "):
-        tag, value = data.split("=")
+        splitted_data = data.split("=")
+        if len(splitted_data) != 2:
+            raise ValueError("Metadata not valid")
+        tag, value = splitted_data
         result.update({tag: valid_metadata(tag, value)})
     return result
 
 
 def parse_hub(hub_line: str):
 
+    print(hub_line)
     result: dict = {}
-    fields = hub_line.split(":")
-    hub_data = fields[1].split(" ")
+    hub_data = hub_line.split(":")
+    fields = hub_data[1].strip().split(" ", 3)
 
-    if fields[0] == "start_hub":
+    if hub_data[0] == "start_hub":
         result["type"] = "start_hub"
 
-    elif fields[0] == "hub":
+    elif hub_data[0] == "hub":
         result["type"] = "hub"
 
-    elif fields[0] == "end_hub":
+    elif hub_data[0] == "end_hub":
         result["type"] = "end_hub"
 
+    else:
+        raise ValueError(f"Hub type not valid '{fields[0]}'")
+
+    x = fields[1]
+    y = fields[2]
+
+    if not x.isdecimal() or not y.isdecimal():
+        raise ValueError(f"Hub not valid")
     result.update(
         {
-            "name": hub_data[1].strip(),
-            "x": int(hub_data[2]),
-            "y": int(hub_data[3]),
-            "matadata": parse_metadata(hub_data[4:]),
+            "name": fields[0],
+            "x": int(x),
+            "y": int(y),
+            "matadata": parse_metadata(fields[3]),
         }
     )
+    print("OK:", result)
     return result
-
-
-try:
-    print(
-        "a=",
-        parse_metadata("[color=red zone=restricted max_drones=20]"),
-        file=sys.stderr,
-    )
-except Exception as e:
-    print("# Error Parsing:", e, file=sys.stderr)
-exit()
 
 
 def parse_connection(data: str) -> dict:
@@ -107,12 +104,15 @@ def parse_connection(data: str) -> dict:
     result["from"] = hubs[0]
     result["to"] = hubs[1]
     if len(data_list) > 1:
-        result["metadata"] = parse_metadata(data_list[1:])
+        result["metadata"] = parse_metadata(data_list[1])
 
     return result
 
+
 def main():
+    map_data = {}
     lines = []
+    error_number = 0
     try:
         with open(sys.argv[1]) as f:
             for line in f:
@@ -120,16 +120,32 @@ def main():
     except Exception as e:
         print(e)
 
+    try:
+        for i, line in enumerate(lines):
+            print(line)
+            if line == "\n" or line.startswith("#"):
+                continue
+            error_number = i + 1
+            splitted_line = line.split(":")
 
-    for line in lines:
-        line = line.split(":")
-        if line[0] == "nb_drones":
-            map_data["nb_drones"] = int(line[1].strip())
-        elif "hub" in line[0]:
-            pass
-        elif line[0] == "connection":
-            map_data["connection"].append(parse_connection(line[1]))
+            if len(splitted_line) != 2:
+                raise ValueError(f"Line not valid")
 
-    print("test =", map_data, file=sys.stderr)
+            if splitted_line[0] == "nb_drones":
+                map_data["nb_drones"] = int(splitted_line[1].strip())
 
-if 
+            elif "hub" in splitted_line[0]:
+                map_data[f"hub_{i + 1}"] = parse_hub(line)
+
+            # elif line[0] == "connection":
+            #     map_data["connection"].append(parse_connection(line))
+            else:
+                pass  # add unkownn type error later
+        print("a=", map_data, file=sys.stderr)
+    except Exception as e:
+        print(f"Parsing error: {e} [line: {error_number}]")
+    return map_data
+
+
+if __name__ == "__main__":
+    main()
