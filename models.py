@@ -63,5 +63,5 @@ class MapData:
         self.hubs: list[Hub] = []
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
-        self.connections: list = []
+        self.connections: list[Connection] = []
         self.drones_number: int = 0
