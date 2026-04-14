@@ -34,20 +34,26 @@ class Parser:
                     result.drones_number = int(line_content)
 
                 elif line_type == "start_hub":
-                    result.start_hub = self.parse_hub(line_content)
+                    hub: Hub = self.parse_hub(line_content)
+                    result.start_hub = hub
+                    result.hubs[hub.name] = hub
 
                 elif line_type == "end_hub":
+                    hub: Hub = self.parse_hub(line_content)
                     result.end_hub = self.parse_hub(line_content)
+                    result.hubs[hub.name] = hub
 
                 elif line_type == "hub":
-                    result.hubs.append(self.parse_hub(line_content))
+                    hub: Hub = self.parse_hub(line_content)
+                    result.hubs[hub.name] = hub
 
                 elif line_type == "connection":
                     result.connections.append(self.parse_connection(line_content))
 
                 else:
                     raise ValueError(f"Unknown type '{line_type}'")
-
+            if result.start_hub is None or result.end_hub is None:
+                raise ValueError("Start hub or End hub are not provided")
             return result
 
         except Exception as e:

@@ -60,8 +60,19 @@ class Connection:
 
 class MapData:
     def __init__(self) -> None:
-        self.hubs: list[Hub] = []
+
+        self.hubs: dict[str, Hub] = {}
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
         self.connections: list[Connection] = []
         self.drones_number: int = 0
+
+    def get_start_hub(self) -> Hub:
+        if self.start_hub is None:
+            raise ValueError("Start hub cannot be None")
+        return self.start_hub
+
+    def get_end_hub(self) -> Hub:
+        if self.end_hub is None:
+            raise ValueError("End hub cannot be None")
+        return self.end_hub
