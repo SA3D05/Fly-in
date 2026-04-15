@@ -1,3 +1,5 @@
 fixme.txt
 __pycache__
 .venv
+.vscode
+test.py

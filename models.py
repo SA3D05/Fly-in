@@ -1,4 +1,5 @@
 from enum import Enum
+from pygame import SRCALPHA, Surface, font, Rect, draw
 
 
 class ZoneType(Enum):
@@ -47,6 +48,28 @@ class Hub:
         self.y: int = y
         self.name: str = name
         self.metadata: HubMetadata = metadata
+        self.surface = Surface((100, 100), SRCALPHA)
+        draw.circle(self.surface, (255, 0, 0), (100 // 2, 100 // 2), 100 // 2)
+        self.rect = Rect(
+            self.surface.get_rect(
+                center=(
+                    (
+                        x * 100,
+                        y * 100,
+                    ),
+                )
+            )
+        )
+        self.text = font.Font(None, 25).render(name, False, "white")
+        self.recttext = Rect(self.text.get_rect(center=(0, 0)))
+
+        # match metadata.color:
+        #     case Color.rainbow:
+        #         self.surface.fill(metadata.color.value)
+        #     case None:
+        #         return
+        #     case _:
+        #         self.surface.fill(metadata.color.value)
 
 
 class Connection:
