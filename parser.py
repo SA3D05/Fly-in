@@ -3,11 +3,13 @@ from models import *
 
 class Parser:
 
-    def parse_map_file(self, filename: str) -> MapData:
+    def parse_map_file(self, filename: str) -> dict:
 
-        result: MapData = MapData()
-        lines: list[str] = []
+        result: dict = dict()
+        lines: list[str] = list()
         line_idx: int = 0
+        hub_id: int = 0
+        connection_id: int = 0
 
         try:
             with open(filename) as f:
@@ -31,36 +33,33 @@ class Parser:
                     raise ValueError(f"Line not valid")
 
                 if line_type == "nb_drones":
-                    result.drones_number = int(line_content)
+                    result["drones_number"] = int(line_content)
 
                 elif line_type == "start_hub":
-                    hub: Hub = self.parse_hub(line_content)
-                    result.start_hub = hub
-                    result.hubs[hub.name] = hub
+                    result["start_hub"] = self.parse_hub(line_content)
 
                 elif line_type == "end_hub":
-                    hub: Hub = self.parse_hub(line_content)
-                    result.end_hub = self.parse_hub(line_content)
-                    result.hubs[hub.name] = hub
+                    result["end_hub"] = self.parse_hub(line_content)
 
                 elif line_type == "hub":
-                    hub: Hub = self.parse_hub(line_content)
-                    result.hubs[hub.name] = hub
+                    hub_id += 1
+                    result[f"hub-{hub_id}"] = self.parse_hub(line_content)
 
                 elif line_type == "connection":
-                    result.connections.append(self.parse_connection(line_content))
+                    connection_id += 1
+                    result[f"connection_{connection_id}"] = self.parse_connection(
+                        line_content
+                    )
 
                 else:
                     raise ValueError(f"Unknown type '{line_type}'")
-            if result.start_hub is None or result.end_hub is None:
-                raise ValueError("Start hub or End hub are not provided")
             return result
 
         except Exception as e:
             print(f"Error Parsing: {e} [line: {line_idx}]")
             exit()
 
-    def parse_hub(self, line_content: str) -> Hub:
+    def parse_hub(self, line_content: str) -> dict:
         fields = line_content.split(" ", 3)
 
         try:
@@ -69,52 +68,36 @@ class Parser:
         except Exception:
             raise ValueError("Hub coordinates not valid")
 
-        return Hub(fields[0], x, y, self.parse_hub_metadata(fields[3]))
+        return {
+            "name": fields[0],
+            "x": x,
+            "y": y,
+            "metadata": self.parse_hub_metadata(fields[3]),
+        }
 
-    def parse_connection(self, line_content: str) -> Connection:
+    def parse_connection(self, line_content: str) -> dict:
 
         data_list = line_content.split(" ", 1)
         hubs = data_list[0].split("-")
-        hub_from: str = hubs[0]
-        hub_to: str = hubs[1]
-        metadata: ConnectionMetadata = ConnectionMetadata()
+        metadata: dict = {
+            "max_link_capacity": 1,
+        }
 
         if len(data_list) > 1:
-            metadata = self.parse_connection_metadata(data_list[1])
+            metadata["max_link_capacity"] = self.parse_connection_metadata(data_list[1])
 
-        return Connection(hub_from, hub_to, metadata)
+        return {
+            "hub_from": hubs[0],
+            "hub_to": hubs[1],
+            "metadata": metadata,
+        }
 
-    def parse_hub_metadata(self, metadata: str) -> HubMetadata:
+    def parse_hub_metadata(self, metadata: str) -> dict:
 
-        result: HubMetadata = HubMetadata()
-
-        parsers = {
-            "zone": {
-                "normal": ZoneType.Normal,
-                "blocked": ZoneType.Blocked,
-                "restricted": ZoneType.Restricted,
-                "priority": ZoneType.Priority,
-            },
-            "color": {
-                "red": Color.red,
-                "blue": Color.blue,
-                "gray": Color.gray,
-                "green": Color.green,
-                "orange": Color.orange,
-                "yellow": Color.yellow,
-                "cyan": Color.cyan,
-                "purple": Color.purple,
-                "brown": Color.brown,
-                "lime": Color.lime,
-                "magenta": Color.magenta,
-                "gold": Color.gold,
-                "black": Color.black,
-                "maroon": Color.maroon,
-                "darkred": Color.darkred,
-                "violet": Color.violet,
-                "crimson": Color.crimson,
-                "rainbow": Color.rainbow,
-            },
+        result: dict = {
+            "zone": "normal",
+            "color": "none",
+            "max_drones": 1,
         }
 
         if metadata.count("[") != 1 or metadata.count("]") != 1:
@@ -130,22 +113,12 @@ class Parser:
 
             tag: str = splitted_data[0]
             value: str = splitted_data[1]
-            try:
-                match tag:
-                    case "zone":
-                        result.zone = parsers[tag][value]
-                    case "color":
-                        result.color = parsers[tag][value]
-                    case "max_drones":
-                        result.max_drones = int(value)
-            except Exception as e:
-                raise ValueError("Metadata not valid")
 
+            result[tag] = value
         return result
 
-    def parse_connection_metadata(self, metadata: str) -> ConnectionMetadata:
+    def parse_connection_metadata(self, metadata: str) -> int:
 
-        result: ConnectionMetadata = ConnectionMetadata()
         if metadata.count("[") != 1 or metadata.count("]") != 1:
             raise ValueError("Metadata not valid")
 
@@ -165,6 +138,4 @@ class Parser:
         if tag != "max_link_capacity":
             raise ValueError("Metadata not valid")
 
-        result.max_link_capacity = int(value)
-
-        return result
+        return int(value)

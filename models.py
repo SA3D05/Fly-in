@@ -43,26 +43,42 @@ class ConnectionMetadata:
 
 
 class Hub:
-    x_pad = 100
-    y_pad = 100
+    # hub_w = (WINDOW_W - 2 * margin - (cols - 1) * gap) / cols
+    WINDOW_W = 1920
+    WINDOW_H = 1080
 
-    def __init__(self, name: str, x: int, y: int, metadata: HubMetadata) -> None:
+    cols = 4
+    rows = 20
+
+    if cols > rows:
+        size = 1080 / (3 * cols + 2)
+
+    else:
+        size = 1920 / (3 * rows + 2)
+    gap = size * 2
+    margin = size * 2
+
+    def __init__(
+        self, name: str, size: int, x: int, y: int, metadata: HubMetadata
+    ) -> None:
         self.name: str = name
         self.metadata: HubMetadata = metadata
-        self.surf = pygame.Surface((100, 100))
-        my_x = (x * 100) + (x * self.x_pad) + 200
-        my_y = (-y * 100) + (-y * self.y_pad) + 500
+        self.surf = pygame.Surface((self.size, self.size))
+        my_x = x * (self.size + self.gap) + self.margin + self.size / 2
+        my_y = -y * (self.size + self.gap) + self.WINDOW_H / 2
         self.rect = pygame.Rect(self.surf.get_rect(center=(my_x, my_y)))
         self.text_surf = pygame.font.Font(None, 25).render(name, False, "white")
         self.text_rect = pygame.Rect(
             self.text_surf.get_rect(
                 center=(
                     my_x,
-                    my_y,
+                    my_y + (self.size * 0.75),
                 )
             )
         )
-        pygame.draw.circle(self.surf, "red", (100 // 2, 100 // 2), 100 // 2)
+        pygame.draw.circle(
+            self.surf, "red", (self.size / 2, self.size / 2), self.size / 2
+        )
 
         # # for color the hub
         # match metadata.color:
@@ -93,6 +109,9 @@ class MapData:
         self.end_hub: Hub | None = None
         self.connections: list[Connection] = []
         self.drones_number: int = 0
+
+        self.max_x = 0
+        self.max_y = 0
 
     def get_start_hub(self) -> Hub:
         if self.start_hub is None:
