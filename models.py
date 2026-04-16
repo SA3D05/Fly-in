@@ -1,5 +1,5 @@
 from enum import Enum
-from pygame import SRCALPHA, Surface, font, Rect, draw
+import pygame
 
 
 class ZoneType(Enum):
@@ -43,33 +43,37 @@ class ConnectionMetadata:
 
 
 class Hub:
+    x_pad = 100
+    y_pad = 100
+
     def __init__(self, name: str, x: int, y: int, metadata: HubMetadata) -> None:
-        self.x: int = x
-        self.y: int = y
         self.name: str = name
         self.metadata: HubMetadata = metadata
-        self.surface = Surface((100, 100), SRCALPHA)
-        draw.circle(self.surface, (255, 0, 0), (100 // 2, 100 // 2), 100 // 2)
-        self.rect = Rect(
-            self.surface.get_rect(
+        self.surf = pygame.Surface((100, 100))
+        my_x = (x * 100) + (x * self.x_pad) + 200
+        my_y = (-y * 100) + (-y * self.y_pad) + 500
+        self.rect = pygame.Rect(self.surf.get_rect(center=(my_x, my_y)))
+        self.text_surf = pygame.font.Font(None, 25).render(name, False, "white")
+        self.text_rect = pygame.Rect(
+            self.text_surf.get_rect(
                 center=(
-                    (
-                        x * 100,
-                        y * 100,
-                    ),
+                    my_x,
+                    my_y,
                 )
             )
         )
-        self.text = font.Font(None, 25).render(name, False, "white")
-        self.recttext = Rect(self.text.get_rect(center=(0, 0)))
+        pygame.draw.circle(self.surf, "red", (100 // 2, 100 // 2), 100 // 2)
 
+        # # for color the hub
         # match metadata.color:
         #     case Color.rainbow:
-        #         self.surface.fill(metadata.color.value)
+        #         pygame.draw.circle(self.surf, "white", (100 // 2, 100 // 2), 100 // 2)
         #     case None:
         #         return
         #     case _:
-        #         self.surface.fill(metadata.color.value)
+        #         pygame.draw.circle(
+        #             self.surf, metadata.color.value, (100 // 2, 100 // 2), 100 // 2
+        #         )
 
 
 class Connection:

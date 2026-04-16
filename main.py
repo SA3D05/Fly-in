@@ -1,4 +1,9 @@
+import os
 from pprint import pprint
+import sys
+
+# hide pygame hello message
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import pygame
 from parser import Parser, MapData
@@ -15,4 +20,7 @@ if __name__ == "__main__":
     # graph.bfs(graph.to_graph(data), data.get_start_hub().name)
     screen = display.Display(data)
 
-    screen.game_loop()
+    try:
+        screen.game_loop()
+    except BaseException:
+        sys.exit()
