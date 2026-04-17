@@ -3,9 +3,13 @@ from models import *
 
 class Parser:
 
-    def parse_map_file(self, filename: str) -> dict:
+    def parse(self, filename: str) -> dict:
 
-        result: dict = dict()
+        result: dict = {
+            "connections": [],
+            "hubs": [],
+            "drones_number": 0,
+        }
         lines: list[str] = list()
         line_idx: int = 0
         hub_id: int = 0
@@ -36,20 +40,19 @@ class Parser:
                     result["drones_number"] = int(line_content)
 
                 elif line_type == "start_hub":
-                    result["start_hub"] = self.parse_hub(line_content)
+                    result["hubs"].append(self.__parse_hub(line_content))
+                    result["hubs"][-1].update({"type": "start_hub"})
 
                 elif line_type == "end_hub":
-                    result["end_hub"] = self.parse_hub(line_content)
+                    result["hubs"].append(self.__parse_hub(line_content))
+                    result["hubs"][-1].update({"type": "end_hub"})
 
                 elif line_type == "hub":
-                    hub_id += 1
-                    result[f"hub-{hub_id}"] = self.parse_hub(line_content)
+                    result["hubs"].append(self.__parse_hub(line_content))
+                    result["hubs"][-1].update({"type": "normal_hub"})
 
                 elif line_type == "connection":
-                    connection_id += 1
-                    result[f"connection_{connection_id}"] = self.parse_connection(
-                        line_content
-                    )
+                    result["connections"].append(self.__parse_connection(line_content))
 
                 else:
                     raise ValueError(f"Unknown type '{line_type}'")
@@ -59,7 +62,7 @@ class Parser:
             print(f"Error Parsing: {e} [line: {line_idx}]")
             exit()
 
-    def parse_hub(self, line_content: str) -> dict:
+    def __parse_hub(self, line_content: str) -> dict:
         fields = line_content.split(" ", 3)
 
         try:
@@ -68,31 +71,31 @@ class Parser:
         except Exception:
             raise ValueError("Hub coordinates not valid")
 
-        return {
+        result: dict = {
             "name": fields[0],
             "x": x,
             "y": y,
-            "metadata": self.parse_hub_metadata(fields[3]),
         }
 
-    def parse_connection(self, line_content: str) -> dict:
+        result.update(self.__parse_hub_metadata(fields[3]))
+        return result
+
+    def __parse_connection(self, line_content: str) -> dict:
 
         data_list = line_content.split(" ", 1)
         hubs = data_list[0].split("-")
-        metadata: dict = {
+        result: dict = {
+            "hub_from": hubs[0],
+            "hub_to": hubs[1],
             "max_link_capacity": 1,
         }
 
         if len(data_list) > 1:
-            metadata["max_link_capacity"] = self.parse_connection_metadata(data_list[1])
+            result.update(self.__parse_connection_metadata(data_list[1]))
 
-        return {
-            "hub_from": hubs[0],
-            "hub_to": hubs[1],
-            "metadata": metadata,
-        }
+        return result
 
-    def parse_hub_metadata(self, metadata: str) -> dict:
+    def __parse_hub_metadata(self, metadata: str) -> dict:
 
         result: dict = {
             "zone": "normal",
@@ -117,7 +120,7 @@ class Parser:
             result[tag] = value
         return result
 
-    def parse_connection_metadata(self, metadata: str) -> int:
+    def __parse_connection_metadata(self, metadata: str) -> dict:
 
         if metadata.count("[") != 1 or metadata.count("]") != 1:
             raise ValueError("Metadata not valid")
@@ -138,4 +141,6 @@ class Parser:
         if tag != "max_link_capacity":
             raise ValueError("Metadata not valid")
 
-        return int(value)
+        return {
+            "max_link_capacity": int(value),
+        }

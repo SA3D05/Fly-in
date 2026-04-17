@@ -1,14 +1,18 @@
 import os
 from pprint import pprint
 import sys
+import json
+from models import MapData
+from display import Display
 
 # hide pygame hello message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 import pygame
-from parser import Parser, MapData
-import graph
-import display
+from parser import Parser
+from validator import Validator
+from models import ParsingError, ValidationError
+
 
 from sys import argv
 
@@ -31,20 +35,38 @@ if __name__ == "__main__":
             "maps/hard/03_ultimate_challenge.txt",
         ],
     ]
+
     pygame.init()
     parser: Parser = Parser()
+    validator: Validator = Validator()
 
-    data: dict = parser.parse_map_file(
-        maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1],
-    )
+    try:
+        raw_data: dict = parser.parse(
+            maps[int(sys.argv[1]) - 1][
+                int(sys.argv[2]) - 1
+            ],  # just for qiuck selection
+        )
 
-    # validate data now before passing it to pygame
+        validator.validate(raw_data)
+    except ValidationError as e:
+        print("Validation Error:", e)
+        sys.exit()
+    except ParsingError as e:
+        print("Parsing Error:", e)
+        sys.exit()
+    # validate raw_data now before passing it to pygame
 
-    pprint(data)
+    # json_raw_data = json.dumps(raw_data, indent=4, sort_keys=True)
+    # print(json_raw_data)
+
+    map_data: MapData = MapData()
+
+    map_data.build_obj(raw_data)
+
+    display = Display(map_data)
     # graph.bfs(graph.to_graph(data), data.get_start_hub().name)
-    # screen = display.Display(data)
 
-    # try:
-    #     screen.game_loop()
-    # except BaseException:
-    #     sys.exit()
+    try:
+        display.game_loop()
+    except BaseException:
+        sys.exit()

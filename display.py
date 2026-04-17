@@ -7,11 +7,12 @@ class Display:
     def __init__(self, map_data: MapData) -> None:
 
         self.screen_width, self.screen_height = 1920, 1080
-        self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.window = pygame.display.set_mode(
+            (self.screen_width, self.screen_height), pygame.RESIZABLE
+        )
         self.clock = pygame.time.Clock()
-        self.text = pygame.font.Font(None, 100)
+        self.text = pygame.font.Font("assets/Anto.ttf", 30)
         self.hubs = map_data.hubs
-        self.connections = map_data.connections
         self.fps_surf = self.text.render("0", False, "white")
         self.frametime_surf = self.text.render("0", False, "white")
         self.current_frametime = 0
@@ -36,13 +37,13 @@ class Display:
             # ================
 
             self.redraw()
-            self.current_frametime = self.clock.tick(120)
+            self.current_frametime = self.clock.tick(60)
 
     def redraw(self) -> None:
         # pygame.draw.line(surface, color, start_pos, end_pos, width=1)
         self.window.fill("black")
         self.window.blit(self.fps_surf, (0, 0))
-        self.window.blit(self.frametime_surf, (0, 100))
+        self.window.blit(self.frametime_surf, (0, 32))
         # draw each hub on the screen
         for hub in self.hubs.values():
 
