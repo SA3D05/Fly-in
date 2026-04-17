@@ -1,14 +1,22 @@
+from pprint import pprint
+
 import pygame
 import sys
 from models import MapData
 
 
 class Display:
-    def __init__(self, map_data: MapData) -> None:
 
-        self.screen_width, self.screen_height = 1920, 1080
+    def __init__(
+        self,
+        map_data: MapData,
+        screen_w,
+        screen_h,
+    ) -> None:
+
+        self.screen_width, self.screen_height = screen_w, screen_h
         self.window = pygame.display.set_mode(
-            (self.screen_width, self.screen_height), pygame.RESIZABLE
+            (self.screen_width + 500, self.screen_height + 500)
         )
         self.clock = pygame.time.Clock()
         self.text = pygame.font.Font("assets/Anto.ttf", 30)
@@ -16,6 +24,7 @@ class Display:
         self.fps_surf = self.text.render("0", False, "white")
         self.frametime_surf = self.text.render("0", False, "white")
         self.current_frametime = 0
+        pprint(self.__dict__)
 
     def game_loop(self) -> None:
         while True:

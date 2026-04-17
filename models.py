@@ -49,20 +49,9 @@ class Color(Enum):
 
 
 class Hub:
-    #     # hub_w = (WINDOW_W - 2 * margin - (cols - 1) * gap) / cols
-    #     WINDOW_W = 1920
-    #     WINDOW_H = 1080
 
-    #     cols = 4
-    #     rows = 20
-
-    #     if cols > rows:
-    #         size = 1080 / (3 * cols + 2)
-
-    #     else:
-    #         size = 1920 / (3 * rows + 2)
-    #     gap = size * 2
-    #     margin = size * 2
+    screen_w = 0
+    screen_h = 0
 
     def __init__(
         self,
@@ -83,54 +72,31 @@ class Hub:
         self.hub_type = hub_type
         self.zone_type = zone_type
 
+        my_x = x * (100 + 400) + 100
+        my_y = y * 200 + 1080 / 2
+
+        Hub.screen_w = max(Hub.screen_w, my_x)
+        Hub.screen_h = max(Hub.screen_h, my_y)
+
         self.surf = pygame.Surface((100, 100))
-        self.rect = pygame.Rect(
-            self.surf.get_rect(center=(x * (100 + 200) + 200, (y * 200) + 300))
+        self.rect = self.surf.get_rect(
+            center=(
+                my_x,
+                my_y,
+            )
         )
 
-        self.text_base = pygame.font.Font("assets/Anto.ttf", 30)
+        self.text_base = pygame.font.Font("assets/Anto.ttf", 20)
         self.text_surf = self.text_base.render(name, True, color)
         self.text_rect = pygame.Rect(
-            self.text_surf.get_rect(center=(x * (100 + 200) + 200, (y * 200) + 400))
+            self.text_surf.get_rect(
+                center=(
+                    my_x,
+                    my_y + 100,
+                )
+            )
         )
         self.surf.fill("grey")
-
-
-#         my_x = x * (self.size + self.gap) + self.margin + self.size / 2
-#         my_y = -y * (self.size + self.gap) + self.WINDOW_H / 2
-#         self.rect = pygame.Rect(self.surf.get_rect(center=(my_x, my_y)))
-#         self.text_surf = pygame.font.Font(None, 25).render(name, False, "white")
-#         self.text_rect = pygame.Rect(
-#             self.text_surf.get_rect(
-#                 center=(
-#                     my_x,
-#                     my_y + (self.size * 0.75),
-#                 )
-#             )
-#         )
-#         pygame.draw.circle(
-#             self.surf, "red", (self.size / 2, self.size / 2), self.size / 2
-#         )
-
-#           # for color the hub
-#           match metadata.color:
-#               case Color.rainbow:
-#                   pygame.draw.circle(self.surf, "white", (100 // 2, 100 // 2), 100 // 2)
-#               case None:
-#                   return
-#               case _:
-#                   pygame.draw.circle(
-#                       self.surf, metadata.color.value, (100 // 2, 100 // 2), 100 // 2
-#                   )
-
-
-# class Connection:
-#     def __init__(
-#         self, hub_from: str, hub_to: str, metadata: ConnectionMetadata
-#     ) -> None:
-#         self.hub_from: str = hub_from
-#         self.hub_to: str = hub_to
-#         self.metadata: ConnectionMetadata = metadata
 
 
 class MapData:
@@ -154,7 +120,7 @@ class MapData:
             raise ValueError("End hub cannot be None")
         return self.end_hub
 
-    def build_obj(self, raw_data: dict) -> None:
+    def build_obj(self, raw_data: dict) -> tuple:
         for hub in raw_data["hubs"]:
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
@@ -169,3 +135,4 @@ class MapData:
                 self.vertical_hubs_number, abs(hub["y"]) + 1
             )
             self.horizontal_hubs_number = max(self.horizontal_hubs_number, hub["x"] + 1)
+        return (Hub.screen_w, Hub.screen_h)

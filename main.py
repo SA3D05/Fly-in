@@ -61,9 +61,9 @@ if __name__ == "__main__":
 
     map_data: MapData = MapData()
 
-    map_data.build_obj(raw_data)
+    screen_w, screen_h = map_data.build_obj(raw_data)
 
-    display = Display(map_data)
+    display = Display(map_data, screen_w, screen_h)
     # graph.bfs(graph.to_graph(data), data.get_start_hub().name)
 
     try:
