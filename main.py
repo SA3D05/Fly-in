@@ -1,20 +1,20 @@
 import os
 from pprint import pprint
 import sys
-import json
-from models import MapData
-from display import Display
 
-# hide pygame hello message
+import graph
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
+
+# hide pygame hello message
 import pygame
+from display import Display
+from models import MapData
 from parser import Parser
 from validator import Validator
 from models import ParsingError, ValidationError
 
-
-from sys import argv
 
 if __name__ == "__main__":
 
@@ -60,10 +60,11 @@ if __name__ == "__main__":
     # print(json_raw_data)
 
     map_data: MapData = MapData()
+    map_data.build_obj(raw_data)
 
-    screen_w, screen_h = map_data.build_obj(raw_data)
-
-    display = Display(map_data, screen_w, screen_h)
+    # pprint(raw_data)
+    # print("=" * 100)
+    display = Display(map_data)
     # graph.bfs(graph.to_graph(data), data.get_start_hub().name)
 
     try:

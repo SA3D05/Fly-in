@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from models import *
 
 
@@ -11,9 +9,9 @@ from models import *
 # add mapdata and generate the graph dict to use it in algo
 
 
-def to_graph(data: MapData) -> dict[str, list[str]]:
+def to_graph(connections: list[Connection]) -> dict[str, list[str]]:
     graph: dict[str, list[str]] = {}
-    for c in data.connections:
+    for c in connections:
         graph.setdefault(c.hub_from, []).append(c.hub_to)
         graph.setdefault(c.hub_to, []).append(c.hub_from)
 

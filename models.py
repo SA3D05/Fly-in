@@ -2,6 +2,8 @@ from enum import Enum
 from pprint import pprint
 import pygame
 
+import graph
+
 
 class ParsingError(Exception): ...
 
@@ -43,15 +45,24 @@ class Color(Enum):
     rainbow = "rainbow"
 
 
-# class ConnectionMetadata:
-#     def __init__(self) -> None:
-#         self.max_link_capacity: int = 1
+class Connection:
+
+    def __init__(
+        self,
+        hub_from: str,
+        hub_to: str,
+        start: tuple[int, int],
+        end: tuple[int, int],
+        max_link_capacity: int = 1,
+    ) -> None:
+        self.hub_from: str = hub_from
+        self.hub_to: str = hub_to
+        self.max_link_capacity: int = max_link_capacity
+        self.start: tuple[int, int] = start
+        self.end: tuple[int, int] = end
 
 
 class Hub:
-
-    screen_w = 0
-    screen_h = 0
 
     def __init__(
         self,
@@ -64,37 +75,20 @@ class Hub:
         zone_type: str,  # later make in ZoneType type
     ) -> None:
 
-        self.name: str = name
-        self.x = x
-        self.y = y
+        self.name = name
+        self.x = x * (100 + 400) + 100
+        self.y = y * 200 + 1080 // 2
         self.color = color
         self.max_drones = max_drones
         self.hub_type = hub_type
         self.zone_type = zone_type
 
-        my_x = x * (100 + 400) + 100
-        my_y = y * 200 + 1080 / 2
-
-        Hub.screen_w = max(Hub.screen_w, my_x)
-        Hub.screen_h = max(Hub.screen_h, my_y)
-
         self.surf = pygame.Surface((100, 100))
-        self.rect = self.surf.get_rect(
-            center=(
-                my_x,
-                my_y,
-            )
-        )
-
-        self.text_base = pygame.font.Font("assets/Anto.ttf", 20)
+        self.rect = self.surf.get_rect(center=(self.x, self.y))
+        self.text_base = pygame.font.Font("assets/Tiny5.ttf", 30)
         self.text_surf = self.text_base.render(name, True, color)
         self.text_rect = pygame.Rect(
-            self.text_surf.get_rect(
-                center=(
-                    my_x,
-                    my_y + 100,
-                )
-            )
+            self.text_surf.get_rect(center=(self.x, self.y + 100))
         )
         self.surf.fill("grey")
 
@@ -105,10 +99,11 @@ class MapData:
         self.hubs: dict[str, Hub] = {}
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
-        # self.connections: list[Connection] = []
+        self.connections: list[Connection] = []
         self.drones_number: int = 0
         self.vertical_hubs_number = 0
         self.horizontal_hubs_number = 0
+        self.graph: dict[str, list[str]] = {}
 
     def get_start_hub(self) -> Hub:
         if self.start_hub is None:
@@ -120,8 +115,11 @@ class MapData:
             raise ValueError("End hub cannot be None")
         return self.end_hub
 
-    def build_obj(self, raw_data: dict) -> tuple:
+    def build_obj(self, raw_data: dict) -> None:
+        self.drones_number = raw_data["drones_number"]
+
         for hub in raw_data["hubs"]:
+
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
                 hub["x"],
@@ -131,8 +129,20 @@ class MapData:
                 hub["type"],
                 hub["zone"],
             )
-            self.vertical_hubs_number = max(
-                self.vertical_hubs_number, abs(hub["y"]) + 1
+
+            if hub["type"] == "start_hub":
+                self.start_hub = self.hubs[hub["name"]]
+            elif hub["type"] == "end_hub":
+                self.end_hub = self.hubs[hub["name"]]
+
+        for c in raw_data["connections"]:
+            self.connections.append(
+                Connection(
+                    c["hub_from"],
+                    c["hub_to"],
+                    (self.hubs[c["hub_from"]].x, self.hubs[c["hub_from"]].y),
+                    (self.hubs[c["hub_to"]].x, self.hubs[c["hub_to"]].y),
+                    c["max_link_capacity"],
+                )
             )
-            self.horizontal_hubs_number = max(self.horizontal_hubs_number, hub["x"] + 1)
-        return (Hub.screen_w, Hub.screen_h)
+        self.graph = graph.to_graph(self.connections)
