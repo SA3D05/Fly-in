@@ -1,5 +1,9 @@
 from enum import Enum
+import os
 from pprint import pprint
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pygame
 
 import graph
@@ -82,8 +86,8 @@ class Hub:
         self.max_drones = max_drones
         self.hub_type = hub_type
         self.zone_type = zone_type
-
-        self.surf = pygame.Surface((100, 100))
+        self.size = 100
+        self.surf = pygame.Surface((self.size, self.size))
         self.rect = self.surf.get_rect(center=(self.x, self.y))
         self.text_base = pygame.font.Font("assets/Tiny5.ttf", 30)
         self.text_surf = self.text_base.render(name, True, color)
@@ -91,6 +95,7 @@ class Hub:
             self.text_surf.get_rect(center=(self.x, self.y + 100))
         )
         self.surf.fill("grey")
+        self.to_end = 0
 
 
 class MapData:

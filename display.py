@@ -43,6 +43,22 @@ class Display:
                     pygame.quit()
                     sys.exit()
 
+                # handle zoom later
+
+                # elif event.type == pygame.MOUSEWHEEL:
+                #     if event.y > 0:
+                #         print("Scrolling up", event.y)
+                #         for h in self.hubs.values():
+                #             h.size += 50
+                #             h.surf = pygame.Surface((h.size, h.size))
+                #             h.surf.fill("grey")
+                #     elif event.y < 0:
+                #         print("Scrolling down", event.y)
+                #         for h in self.hubs.values():
+                #             h.size -= 50
+                #             h.surf = pygame.Surface((h.size, h.size))
+                #             h.surf.fill("grey")
+
             # draw hubs
             self.redraw()
 

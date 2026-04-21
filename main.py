@@ -10,7 +10,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 # hide pygame hello message
 import pygame
 from display import Display
-from models import MapData
+from models import Hub, MapData
 from parser import Parser
 from validator import Validator
 from models import ParsingError, ValidationError
@@ -54,20 +54,46 @@ if __name__ == "__main__":
     except ParsingError as e:
         print("Parsing Error:", e)
         sys.exit()
-    # validate raw_data now before passing it to pygame
+
+    # validate raw_data now before passing it to pygameclea
 
     # json_raw_data = json.dumps(raw_data, indent=4, sort_keys=True)
     # print(json_raw_data)
 
+    def solve(data: MapData, connections: dict, first_hub: str, to_end: int):
+
+        stack: list[tuple[str, int]] = []
+        visited: list[str] = []
+        stack.append((first_hub, to_end))
+        while stack:
+
+            current_hub, to_end = stack.pop()
+
+            data.hubs[current_hub].to_end = to_end
+            visited.append(current_hub)
+            to_end += 1
+            for neighbor in connections[current_hub]:
+                if neighbor in stack:
+                    continue
+                if neighbor in visited:
+                    continue
+                stack.append((neighbor, to_end))
+
     map_data: MapData = MapData()
     map_data.build_obj(raw_data)
 
+    # pprint()``
+
+    solve(map_data, graph.to_graph(map_data.connections), map_data.end_hub.name, 0)  # type: ignore
+
+    pprint({v.name: v.to_end for v in map_data.hubs.values()})
     # pprint(raw_data)
     # print("=" * 100)
     display = Display(map_data)
-    # graph.bfs(graph.to_graph(data), data.get_start_hub().name)
-
     try:
         display.game_loop()
     except BaseException:
         sys.exit()
+    # try:
+    # except BaseException:
+    #     sys.exit()
