@@ -13,7 +13,7 @@ from display import Display
 from models import Hub, MapData
 from parser import Parser
 from validator import Validator
-from models import ParsingError, ValidationError
+from models import ParsingError, ValidationError, Drone
 
 
 if __name__ == "__main__":
@@ -82,14 +82,15 @@ if __name__ == "__main__":
     map_data: MapData = MapData()
     map_data.build_obj(raw_data)
 
-    # pprint()``
-
-    solve(map_data, graph.to_graph(map_data.connections), map_data.end_hub.name, 0)  # type: ignore
+    solve(map_data, graph.to_graph(map_data.connections), map_data.end_hub.name, 0)
 
     pprint({v.name: v.to_end for v in map_data.hubs.values()})
-    # pprint(raw_data)
-    # print("=" * 100)
-    display = Display(map_data)
+
+    d1 = Drone(
+        map_data,
+    )
+
+    display = Display(map_data, d1)
     try:
         display.game_loop()
     except BaseException:

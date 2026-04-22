@@ -80,19 +80,19 @@ class Hub:
     ) -> None:
 
         self.name = name
-        self.x = x * (100 + 400) + 100
-        self.y = y * 200 + 1080 // 2
+        self.x = x * (50 + 100) + 50
+        self.y = y * 100 + (1080 // 2) // 2
         self.color = color
         self.max_drones = max_drones
         self.hub_type = hub_type
         self.zone_type = zone_type
-        self.size = 100
+        self.size = 50
         self.surf = pygame.Surface((self.size, self.size))
         self.rect = self.surf.get_rect(center=(self.x, self.y))
-        self.text_base = pygame.font.Font("assets/Tiny5.ttf", 30)
+        self.text_base = pygame.font.Font("assets/Tiny5.ttf", 20)
         self.text_surf = self.text_base.render(name, True, color)
         self.text_rect = pygame.Rect(
-            self.text_surf.get_rect(center=(self.x, self.y + 100))
+            self.text_surf.get_rect(center=(self.x, self.y + 50))
         )
         self.surf.fill("grey")
         self.to_end = 0
@@ -151,3 +151,34 @@ class MapData:
                 )
             )
         self.graph = graph.to_graph(self.connections)
+
+
+class Drone:
+
+    def __init__(
+        self,
+        mapdata: MapData,
+    ) -> None:
+        self.mapdata = mapdata
+        self.x = mapdata.start_hub.x
+        self.y = mapdata.start_hub.y
+
+        self.size = 30
+        self.surf = pygame.Surface((self.size, self.size))
+        self.rect = self.surf.get_rect(center=(self.x, self.y))
+        self.graph = mapdata.graph
+        self.current_hub = mapdata.start_hub.name
+        self.surf.fill("red")
+
+    def move(self):
+        target_hub: str | None = None
+
+        for hub in self.mapdata.graph[self.current_hub]:
+            if target_hub is None:
+                target_hub = hub
+            elif self.mapdata.hubs[hub].to_end < self.mapdata.hubs[target_hub].to_end:
+                target_hub = hub
+        self.current_hub = target_hub
+        self.x = self.mapdata.hubs[self.current_hub].x
+        self.y = self.mapdata.hubs[self.current_hub].y
+        self.rect = self.surf.get_rect(center=(self.x, self.y))
