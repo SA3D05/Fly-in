@@ -1,6 +1,3 @@
-from models import *
-
-
 class Parser:
 
     def parse(self, filename: str) -> dict:

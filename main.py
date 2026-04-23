@@ -1,19 +1,19 @@
+#!.venv/bin/python3
+
 import os
-from pprint import pprint
-import sys
-
-import graph
-
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 
 # hide pygame hello message
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
+import sys
+from pprint import pprint
+from algo import to_graph
 from display import Display
-from models import Hub, MapData
+from model import Drone, MapData
 from parser import Parser
 from validator import Validator
-from models import ParsingError, ValidationError, Drone
+from exception_modles import ParsingError, ValidationError
 
 
 if __name__ == "__main__":
@@ -42,9 +42,7 @@ if __name__ == "__main__":
 
     try:
         raw_data: dict = parser.parse(
-            maps[int(sys.argv[1]) - 1][
-                int(sys.argv[2]) - 1
-            ],  # just for qiuck selection
+            maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]  # just for qiuck selection
         )
 
         validator.validate(raw_data)
@@ -55,46 +53,22 @@ if __name__ == "__main__":
         print("Parsing Error:", e)
         sys.exit()
 
-    # validate raw_data now before passing it to pygameclea
+    mapdata: MapData = MapData()
+    mapdata.build_obj(raw_data)
+    mapdata.graph = to_graph(mapdata.connections)
 
-    # json_raw_data = json.dumps(raw_data, indent=4, sort_keys=True)
-    # print(json_raw_data)
+    # solve(mapdata, graph.to_graph(mapdata.connections), mapdata.end_hub.name, 0)
 
-    def solve(data: MapData, connections: dict, first_hub: str, to_end: int):
+    pprint({v.name: v.to_end for v in mapdata.hubs.values()})
 
-        stack: list[tuple[str, int]] = []
-        visited: list[str] = []
-        stack.append((first_hub, to_end))
-        while stack:
+    d1 = Drone(mapdata)
+    display = Display(mapdata, d1)
+    display.game_loop()
 
-            current_hub, to_end = stack.pop()
-
-            data.hubs[current_hub].to_end = to_end
-            visited.append(current_hub)
-            to_end += 1
-            for neighbor in connections[current_hub]:
-                if neighbor in stack:
-                    continue
-                if neighbor in visited:
-                    continue
-                stack.append((neighbor, to_end))
-
-    map_data: MapData = MapData()
-    map_data.build_obj(raw_data)
-
-    solve(map_data, graph.to_graph(map_data.connections), map_data.end_hub.name, 0)
-
-    pprint({v.name: v.to_end for v in map_data.hubs.values()})
-
-    d1 = Drone(
-        map_data,
-    )
-
-    display = Display(map_data, d1)
-    try:
-        display.game_loop()
-    except BaseException:
-        sys.exit()
+    # try:
+    #     display.game_loop()
+    # except BaseException:
+    #     sys.exit()
     # try:
     # except BaseException:
     #     sys.exit()

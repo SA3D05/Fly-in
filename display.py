@@ -1,26 +1,35 @@
 import pygame
 import sys
-from models import MapData, Drone
-from pprint import pprint
+from globals import (
+    FONT_FAMILY_PATH,
+    HUB_SIZE,
+    MITRIX_TEXT_SIZE,
+    SCREEN_HEIGHT,
+    SCREEN_WIDTH,
+)
+from model import MapData, Drone
 
 
 class Display:
 
     def __init__(self, map_data: MapData, drone: Drone) -> None:
 
-        self.screen_width, self.screen_height = 1920 / 2, 1080 / 2
         self.window = pygame.display.set_mode(
-            (self.screen_width, self.screen_height), pygame.RESIZABLE
+            (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
         )
+
         self.clock = pygame.time.Clock()
-        self.text = pygame.font.Font("assets/Tiny5.ttf", 30)
-        self.hubs = map_data.hubs
-        self.connections = map_data.connections
-        self.drone = drone
+
+        # those just for debugging
+        self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
         self.fps_surf = self.text.render("0", False, "white")
         self.frametime_surf = self.text.render("0", False, "white")
         self.current_frametime = 0
         self.moves = 0
+
+        self.hubs = map_data.hubs
+        self.connections = map_data.connections
+        self.drone = drone
 
     def game_loop(self) -> None:
         while True:
@@ -77,19 +86,28 @@ class Display:
         self.window.blit(self.fps_surf, (0, 0))
         self.window.blit(self.frametime_surf, (0, 32))
 
-        # draw connections here ...
-        for c in self.connections:
-            pygame.draw.line(self.window, "grey", c.start, c.end, 5)
+        # # draw connections here ...
+        # for c in self.connections:
+        #     pygame.draw.line(self.window, "grey", c.start, c.end, 5)
         # draw each hub on the screen
         for hub in self.hubs.values():
 
             # display hub
-            self.window.blit(hub.surf, hub.rect)
+            self.window.blit(
+                hub.surf,
+                (hub.x * 100 + SCREEN_HEIGHT // 2, hub.y * 100 + SCREEN_HEIGHT // 2),
+            )
 
             # display hub text
-            self.window.blit(hub.text_surf, hub.text_rect)
+            self.window.blit(
+                hub.text_surf,
+                (
+                    hub.x * 100 + SCREEN_HEIGHT // 2,
+                    hub.y * 100 + SCREEN_HEIGHT // 2 + HUB_SIZE,
+                ),
+            )
 
-        # draw drones here ...
-        self.window.blit(self.drone.surf, self.drone.rect)
+        # # draw drones here ...
+        # self.window.blit(self.drone.surf, self.drone.rect)
 
         pygame.display.update()
