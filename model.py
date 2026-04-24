@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from globals import FONT_FAMILY_PATH, HUB_NAME_SIZE, HUB_SIZE
 import pygame
 
@@ -54,7 +56,6 @@ class MapData:
 
         self.hubs: dict[str, Hub] = {}
         self.connections: list[Connection] = []
-        self.graph: dict[str, list[str]] = {}
 
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
@@ -107,28 +108,26 @@ class Drone:
 
     def __init__(
         self,
-        mapdata: MapData,
+        graph: dict,
+        hubs: dict[str, Hub],
+        start_hub: str,
     ) -> None:
-        self.mapdata = mapdata
-        self.x = mapdata.start_hub.x
-        self.y = mapdata.start_hub.y
 
-        self.size = 30
+        self.hubs = hubs
+        self.size = HUB_SIZE - 10
         self.surf = pygame.Surface((self.size, self.size))
-        self.rect = self.surf.get_rect(center=(self.x, self.y))
-        self.graph = mapdata.graph
-        self.current_hub = mapdata.start_hub.name
-        self.surf.fill("red")
+        self.graph = graph
+        self.current_hub: str = start_hub
+        self.x = hubs[start_hub].x
+        self.y = hubs[start_hub].y
+        self.surf.fill("white")
 
-    def move(self):
-        target_hub: str | None = None
+    def move(self) -> None:
+        target_hub: str = self.current_hub
 
-        for hub in self.mapdata.graph[self.current_hub]:
-            if target_hub is None:
-                target_hub = hub
-            elif self.mapdata.hubs[hub].to_end < self.mapdata.hubs[target_hub].to_end:
+        for hub in self.graph[self.current_hub]:
+            if self.hubs[hub].to_end < self.hubs[target_hub].to_end:
                 target_hub = hub
         self.current_hub = target_hub
-        self.x = self.mapdata.hubs[self.current_hub].x
-        self.y = self.mapdata.hubs[self.current_hub].y
-        self.rect = self.surf.get_rect(center=(self.x, self.y))
+        self.x = self.hubs[self.current_hub].x
+        self.y = self.hubs[self.current_hub].y

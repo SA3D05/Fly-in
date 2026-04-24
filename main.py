@@ -8,7 +8,7 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 import sys
 from pprint import pprint
-from algo import to_graph
+from algo import Simulator
 from display import Display
 from model import Drone, MapData
 from parser import Parser
@@ -55,13 +55,14 @@ if __name__ == "__main__":
 
     mapdata: MapData = MapData()
     mapdata.build_obj(raw_data)
-    mapdata.graph = to_graph(mapdata.connections)
 
-    # solve(mapdata, graph.to_graph(mapdata.connections), mapdata.end_hub.name, 0)
+    sim: Simulator = Simulator(mapdata)
+    sim.generate_graph()
+    sim.solve()
 
-    pprint({v.name: v.to_end for v in mapdata.hubs.values()})
+    # pprint({v.name: v.to_end for v in mapdata.hubs.values()})
 
-    d1 = Drone(mapdata)
+    d1 = Drone(sim.graph, mapdata.hubs, mapdata.get_start_hub().name)
     display = Display(mapdata, d1)
     display.game_loop()
 

@@ -1,11 +1,17 @@
 import pygame
 import sys
 from globals import (
+    CONNECTION_LINE_COLOR,
+    CONNECTION_LINE_SIZE,
     FONT_FAMILY_PATH,
+    HORIZONTAL_SHIFT,
+    HUB_GAP_HORIZONTAL,
+    HUB_GAP_VERTICAL,
     HUB_SIZE,
     MITRIX_TEXT_SIZE,
     SCREEN_HEIGHT,
     SCREEN_WIDTH,
+    VERTICAL_SHIFT,
 )
 from model import MapData, Drone
 
@@ -58,22 +64,6 @@ class Display:
                         self.moves += 1
                         print("cutrrent move:", self.moves)
 
-                # handle zoom later
-
-                # elif event.type == pygame.MOUSEWHEEL:
-                #     if event.y > 0:
-                #         print("Scrolling up", event.y)
-                #         for h in self.hubs.values():
-                #             h.size += 50
-                #             h.surf = pygame.Surface((h.size, h.size))
-                #             h.surf.fill("grey")
-                #     elif event.y < 0:
-                #         print("Scrolling down", event.y)
-                #         for h in self.hubs.values():
-                #             h.size -= 50
-                #             h.surf = pygame.Surface((h.size, h.size))
-                #             h.surf.fill("grey")
-
             # draw hubs
             self.redraw()
 
@@ -87,27 +77,44 @@ class Display:
         self.window.blit(self.frametime_surf, (0, 32))
 
         # # draw connections here ...
-        # for c in self.connections:
-        #     pygame.draw.line(self.window, "grey", c.start, c.end, 5)
+        for c in self.connections:
+            pygame.draw.line(
+                self.window,
+                CONNECTION_LINE_COLOR,
+                self.get_correct_coordinates(*c.start_pos),
+                self.get_correct_coordinates(*c.end_pos),
+                CONNECTION_LINE_SIZE,
+            )
         # draw each hub on the screen
         for hub in self.hubs.values():
 
             # display hub
             self.window.blit(
                 hub.surf,
-                (hub.x * 100 + SCREEN_HEIGHT // 2, hub.y * 100 + SCREEN_HEIGHT // 2),
+                self.get_correct_coordinates(hub.x, hub.y),
             )
 
             # display hub text
             self.window.blit(
                 hub.text_surf,
-                (
-                    hub.x * 100 + SCREEN_HEIGHT // 2,
-                    hub.y * 100 + SCREEN_HEIGHT // 2 + HUB_SIZE,
-                ),
+                self.get_correct_coordinates(hub.x, hub.y, True),
             )
 
-        # # draw drones here ...
-        # self.window.blit(self.drone.surf, self.drone.rect)
+        # draw drones here ...
+        self.window.blit(
+            self.drone.surf,
+            self.get_correct_coordinates(self.drone.x, self.drone.y),
+        )
 
         pygame.display.update()
+
+    def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
+        return (
+            x * (100 + HUB_GAP_HORIZONTAL) + HORIZONTAL_SHIFT,
+            (
+                y * (100 + HUB_GAP_VERTICAL)
+                + VERTICAL_SHIFT
+                + HUB_GAP_VERTICAL
+                + (HUB_SIZE if is_text else 0)
+            ),
+        )
