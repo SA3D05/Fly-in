@@ -1,16 +1,18 @@
 #!.venv/bin/python3
 
 import os
+from pprint import pprint
+
+
+from display import Display
 
 
 # hide pygame hello message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 import sys
-from pprint import pprint
 from algo import Simulator
-from display import Display
-from model import Drone, MapData
+from model import MapData
 from parser import Parser
 from validator import Validator
 from exception_modles import ParsingError, ValidationError
@@ -42,7 +44,8 @@ if __name__ == "__main__":
 
     try:
         raw_data: dict = parser.parse(
-            maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]  # just for qiuck selection
+            # just for qiuck selection
+            maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
         )
 
         validator.validate(raw_data)
@@ -57,19 +60,12 @@ if __name__ == "__main__":
     mapdata.build_obj(raw_data)
 
     sim: Simulator = Simulator(mapdata)
-    sim.generate_graph()
+
+    sim.init_graph()
     sim.solve()
+    sim.init_drones()
 
-    # pprint({v.name: v.to_end for v in mapdata.hubs.values()})
+    # pprint([d.__dict__ for d in mapdata.hubs.values()])
+    display: Display = Display(sim)
 
-    d1 = Drone(sim.graph, mapdata.hubs, mapdata.get_start_hub().name)
-    display = Display(mapdata, d1)
     display.game_loop()
-
-    # try:
-    #     display.game_loop()
-    # except BaseException:
-    #     sys.exit()
-    # try:
-    # except BaseException:
-    #     sys.exit()

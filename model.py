@@ -1,6 +1,4 @@
-from pprint import pprint
-
-from globals import FONT_FAMILY_PATH, HUB_NAME_SIZE, HUB_SIZE
+from globals import DRONE_IMG, DRONE_SIZE, FONT_FAMILY_PATH, HUB_NAME_SIZE, HUB_SIZE
 import pygame
 
 
@@ -43,12 +41,15 @@ class Hub:
         self.zone_type = zone_type
 
         self.surf = pygame.Surface((HUB_SIZE, HUB_SIZE))
-
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
         self.text_surf = self.text_base.render(name, True, color)
-
         self.surf.fill(color)
+
         self.to_end = 0
+        self.drones_setting = 0
+
+    def get_coordinates(self) -> tuple[int, int]:
+        return (self.x, self.y)
 
 
 class MapData:
@@ -106,28 +107,14 @@ class MapData:
 
 class Drone:
 
-    def __init__(
-        self,
-        graph: dict,
-        hubs: dict[str, Hub],
-        start_hub: str,
-    ) -> None:
+    def __init__(self, id: int, coordinates: tuple[int, int], start_hub: str) -> None:
 
-        self.hubs = hubs
-        self.size = HUB_SIZE - 10
-        self.surf = pygame.Surface((self.size, self.size))
-        self.graph = graph
+        self.x, self.y = coordinates
         self.current_hub: str = start_hub
-        self.x = hubs[start_hub].x
-        self.y = hubs[start_hub].y
-        self.surf.fill("white")
+        img = pygame.image.load(DRONE_IMG)
+        img = pygame.transform.rotate(img, -90)
+        self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
+        self.reach_goal: bool = False
 
-    def move(self) -> None:
-        target_hub: str = self.current_hub
-
-        for hub in self.graph[self.current_hub]:
-            if self.hubs[hub].to_end < self.hubs[target_hub].to_end:
-                target_hub = hub
-        self.current_hub = target_hub
-        self.x = self.hubs[self.current_hub].x
-        self.y = self.hubs[self.current_hub].y
+    def get_coordinates(self) -> tuple[int, int]:
+        return (self.x, self.y)

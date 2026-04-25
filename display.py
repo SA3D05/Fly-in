@@ -1,41 +1,34 @@
+import random
+
 import pygame
 import sys
-from globals import (
-    CONNECTION_LINE_COLOR,
-    CONNECTION_LINE_SIZE,
-    FONT_FAMILY_PATH,
-    HORIZONTAL_SHIFT,
-    HUB_GAP_HORIZONTAL,
-    HUB_GAP_VERTICAL,
-    HUB_SIZE,
-    MITRIX_TEXT_SIZE,
-    SCREEN_HEIGHT,
-    SCREEN_WIDTH,
-    VERTICAL_SHIFT,
-)
-from model import MapData, Drone
+from algo import Simulator
+from globals import *
+
+from model import Connection, Hub, Drone
 
 
 class Display:
 
-    def __init__(self, map_data: MapData, drone: Drone) -> None:
+    def __init__(self, sim: Simulator) -> None:
 
         self.window = pygame.display.set_mode(
             (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
         )
 
+        self.hubs: list[Hub] = [hub for hub in sim.mapdata.hubs.values()]
+        self.connections: list[Connection] = sim.mapdata.connections
+        self.drones: list[Drone] = sim.drones
+        self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
 
-        # those just for debugging
+        # ========== those just for debugging ================
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
         self.fps_surf = self.text.render("0", False, "white")
         self.frametime_surf = self.text.render("0", False, "white")
         self.current_frametime = 0
-        self.moves = 0
-
-        self.hubs = map_data.hubs
-        self.connections = map_data.connections
-        self.drone = drone
+        # =============================================
+        self.move = 0
 
     def game_loop(self) -> None:
         while True:
@@ -60,9 +53,9 @@ class Display:
                         pygame.quit()
                         sys.exit()
                     elif event.key == pygame.K_SPACE:
-                        self.drone.move()
-                        self.moves += 1
-                        print("cutrrent move:", self.moves)
+                        self.sim.move()
+                        self.move += 1
+                        print("Dron Move:", self.move)
 
             # draw hubs
             self.redraw()
@@ -70,13 +63,35 @@ class Display:
             # set current frame time
             self.current_frametime = self.clock.tick(60)
 
-    def redraw(self) -> None:
+    def redraw(
+        self,
+    ) -> None:
         # pygame.draw.line(surface, color, start_pos, end_pos, width=1)
         self.window.fill("black")
         self.window.blit(self.fps_surf, (0, 0))
-        self.window.blit(self.frametime_surf, (0, 32))
+        self.window.blit(self.frametime_surf, (0, 50))
 
-        # # draw connections here ...
+        self.draw_connections()
+        self.draw_hubs()
+        self.draw_drones()
+
+        pygame.display.update()
+
+    def get_random_coordinates(self, coordinates: tuple) -> tuple:
+        return tuple(c + random.randint(0, 10) for c in coordinates)
+
+    def draw_drones(self):
+        for drone in self.drones:
+            self.window.blit(
+                drone.surf,
+                drone.surf.get_rect(
+                    center=self.get_random_coordinates(
+                        self.get_correct_coordinates(drone.x, drone.y)
+                    ),
+                ),
+            )
+
+    def draw_connections(self):
         for c in self.connections:
             pygame.draw.line(
                 self.window,
@@ -85,8 +100,9 @@ class Display:
                 self.get_correct_coordinates(*c.end_pos),
                 CONNECTION_LINE_SIZE,
             )
-        # draw each hub on the screen
-        for hub in self.hubs.values():
+
+    def draw_hubs(self):
+        for hub in self.hubs:
 
             # display hub
             self.window.blit(
@@ -99,14 +115,6 @@ class Display:
                 hub.text_surf,
                 self.get_correct_coordinates(hub.x, hub.y, True),
             )
-
-        # draw drones here ...
-        self.window.blit(
-            self.drone.surf,
-            self.get_correct_coordinates(self.drone.x, self.drone.y),
-        )
-
-        pygame.display.update()
 
     def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
         return (
