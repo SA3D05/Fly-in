@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
         validator.validate(raw_data)
     except ValidationError as e:
+
         print("Validation Error:", e)
         sys.exit()
     except ParsingError as e:
@@ -62,10 +63,13 @@ if __name__ == "__main__":
     sim: Simulator = Simulator(mapdata)
 
     sim.init_graph()
-    sim.solve()
+    # sim.solve()
+    sim.new_solve()
+
+    # implement the new algo
+
     sim.init_drones()
 
-    # pprint([d.__dict__ for d in mapdata.hubs.values()])
     display: Display = Display(sim)
 
     display.game_loop()

@@ -42,7 +42,9 @@ class Hub:
 
         self.surf = pygame.Surface((HUB_SIZE, HUB_SIZE))
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
-        self.text_surf = self.text_base.render(name, True, color)
+        self.text_surf = self.text_base.render(
+            f"{name}-{zone_type}", True, "black", "white"
+        )
         self.surf.fill(color)
 
         self.to_end = 0
@@ -109,11 +111,16 @@ class Drone:
 
     def __init__(self, id: int, coordinates: tuple[int, int], start_hub: str) -> None:
 
+        self.id = id
         self.x, self.y = coordinates
         self.current_hub: str = start_hub
-        img = pygame.image.load(DRONE_IMG)
-        img = pygame.transform.rotate(img, -90)
-        self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
+        # img = pygame.image.load(DRONE_IMG)
+        # img = pygame.transform.rotate(img, -90)
+        # self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
+
+        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, DRONE_SIZE)
+        self.surf = self.text_base.render(f"{id}", True, "black")
+
         self.reach_goal: bool = False
 
     def get_coordinates(self) -> tuple[int, int]:

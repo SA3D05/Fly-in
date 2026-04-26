@@ -53,9 +53,8 @@ class Display:
                         pygame.quit()
                         sys.exit()
                     elif event.key == pygame.K_SPACE:
-                        self.sim.move()
                         self.move += 1
-                        print("Dron Move:", self.move)
+                        self.sim.move(self.move)
 
             # draw hubs
             self.redraw()
@@ -78,7 +77,7 @@ class Display:
         pygame.display.update()
 
     def get_random_coordinates(self, coordinates: tuple) -> tuple:
-        return tuple(c + random.randint(0, 10) for c in coordinates)
+        return tuple(c + random.randint(0, 3) for c in coordinates)
 
     def draw_drones(self):
         for drone in self.drones:
@@ -107,13 +106,15 @@ class Display:
             # display hub
             self.window.blit(
                 hub.surf,
-                self.get_correct_coordinates(hub.x, hub.y),
+                hub.surf.get_rect(center=self.get_correct_coordinates(hub.x, hub.y)),
             )
 
             # display hub text
             self.window.blit(
                 hub.text_surf,
-                self.get_correct_coordinates(hub.x, hub.y, True),
+                hub.text_surf.get_rect(
+                    center=self.get_correct_coordinates(hub.x, hub.y, True)
+                ),
             )
 
     def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
@@ -123,6 +124,6 @@ class Display:
                 y * (100 + HUB_GAP_VERTICAL)
                 + VERTICAL_SHIFT
                 + HUB_GAP_VERTICAL
-                + (HUB_SIZE if is_text else 0)
+                + (HUB_SIZE + 20 if is_text else 0)
             ),
         )
