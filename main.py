@@ -2,9 +2,8 @@
 
 import os
 from pprint import pprint
-
-
 from display import Display
+from globals import MAP_FILE
 
 
 # hide pygame hello message
@@ -42,10 +41,15 @@ if __name__ == "__main__":
     parser: Parser = Parser()
     validator: Validator = Validator()
 
+    # print(len(sys.argv))
+    if len(sys.argv) > 1:
+        MAP_FILE = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
+
     try:
         raw_data: dict = parser.parse(
             # just for qiuck selection
-            maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
+            #
+            MAP_FILE
         )
 
         validator.validate(raw_data)
@@ -63,12 +67,13 @@ if __name__ == "__main__":
     sim: Simulator = Simulator(mapdata)
 
     sim.init_graph()
-    # sim.solve()
+    sim.init_path()
 
+    pprint(sim.path)
     # implement the new algo
 
     sim.init_drones()
 
-    display: Display = Display(sim)
+    display: Display = Display(sim, MAP_FILE)
 
     display.game_loop()

@@ -1,3 +1,4 @@
+from pprint import pprint
 import random
 
 import pygame
@@ -10,7 +11,7 @@ from model import Connection, Hub, Drone
 
 class Display:
 
-    def __init__(self, sim: Simulator) -> None:
+    def __init__(self, sim: Simulator, map_file_name: str) -> None:
 
         self.window = pygame.display.set_mode(
             (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
@@ -26,6 +27,7 @@ class Display:
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
         self.fps_surf = self.text.render("0", False, "white")
         self.frametime_surf = self.text.render("0", False, "white")
+        self.map_file = self.text.render(map_file_name, False, "white", "black")
         self.current_frametime = 0
         # =============================================
         self.move = 0
@@ -53,9 +55,8 @@ class Display:
                         pygame.quit()
                         sys.exit()
                     elif event.key == pygame.K_SPACE:
-                        # self.move += 1
-                        # self.sim.move(self.move)
-                        self.sim.new_solve()
+                        self.move += 1
+                        self.sim.move(self.move)
 
             # draw hubs
             self.redraw()
@@ -68,12 +69,16 @@ class Display:
     ) -> None:
         # pygame.draw.line(surface, color, start_pos, end_pos, width=1)
         self.window.fill("black")
-        self.window.blit(self.fps_surf, (0, 0))
-        self.window.blit(self.frametime_surf, (0, 50))
 
         self.draw_connections()
         self.draw_hubs()
         self.draw_drones()
+        self.window.blit(self.fps_surf, (0, 0))
+        self.window.blit(self.frametime_surf, (0, 50))
+        self.window.blit(
+            self.map_file,
+            self.map_file.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)),
+        )
 
         pygame.display.update()
 

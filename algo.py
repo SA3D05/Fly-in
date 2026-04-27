@@ -11,41 +11,15 @@ class Simulator:
         self.mapdata: MapData = mapdata
         self.graph: dict[str, list[tuple[str, int]]] = {}
         self.drones: list[Drone] = []
+        self.path = []
 
-    def get_random_color(self) -> tuple:
-        return tuple(random.randint(0, 255) for _ in range(3))
-
-    def solve(self) -> None:
-        stack: list[tuple[str, int]] = [
-            (self.mapdata.get_end_hub().name, 0),
-        ]
-        visited: list[str] = []
-
-        while stack:
-
-            current_hub, to_end = stack.pop()
-            print(current_hub, to_end)
-            self.mapdata.hubs[current_hub].to_end = to_end
-            visited.append(current_hub)
-            # to_end += 1
-            for neighbor, cost in self.graph[current_hub]:
-                if neighbor in stack:
-                    continue
-                if neighbor in visited:
-                    continue
-                stack.append((neighbor, to_end + cost))
-
-        # pprint({h.name: h.to_end for h in self.mapdata.hubs.values()})
-
-    def new_solve(self):
+    def init_path(self):
         # implement dfs
         stack = [([self.mapdata.get_start_hub().name], 0)]
 
         paths = []
         while stack:
 
-            print(stack)
-            input()
             path, move = stack.pop()
             current_hub = path[-1]
 
@@ -60,7 +34,7 @@ class Simulator:
             for neighbor, cost in self.graph[current_hub]:
                 if neighbor not in path:
                     stack.append((path + [neighbor], cost + move))
-        print(paths)
+        self.path = min(paths, key=lambda x: x["move"])["path"]
 
     # p = {
     # start : [dist_gate1]
@@ -88,39 +62,51 @@ class Simulator:
                     cost[self.mapdata.hubs[c.hub_from].zone_type],
                 ),
             )
-        pprint(self.graph)
 
     def move(self, move: int) -> None:
         print("=" * 10, "move", move, "=" * 10)
+
         for drone in self.drones:
 
-            if drone.reach_goal:
+            current_hub = self.path[drone.path_idx]
+            if current_hub == "goal":
                 continue
 
-            target_hub: Hub = self.mapdata.hubs[drone.current_hub]
-            current_hub: Hub = target_hub
+            next_hub = self.path[drone.path_idx + 1]
 
-            for hub in self.graph[drone.current_hub]:
-                current_hub = self.mapdata.hubs[hub[0]]
+            if self.mapdata.hubs[next_hub].drones_setting == 0 or next_hub == "goal":
+                print(
+                    f"Drone '{drone.id}'",
+                    f"go from '{current_hub}'",
+                    f"to '{next_hub}'",
+                )
 
-                if (
-                    current_hub.to_end < target_hub.to_end
-                    and current_hub.drones_setting == 0
-                ) or current_hub.hub_type == "end_hub":
+                self.mapdata.hubs[next_hub].drones_setting += 1
+                self.mapdata.hubs[current_hub].drones_setting -= 1
+                drone.path_idx += 1
 
-                    print(
-                        f"Drone '{drone.id}'",
-                        f"go from '{drone.current_hub}'",
-                        f"to '{current_hub.name}'",
-                    )
+                drone.x = self.mapdata.hubs[next_hub].x
+                drone.y = self.mapdata.hubs[next_hub].y
 
-                    target_hub = current_hub
-                    target_hub.drones_setting += 1
-                    self.mapdata.hubs[drone.current_hub].drones_setting -= 1
+            # target_hub: Hub = self.mapdata.hubs[drone.current_hub]
+            # current_hub: Hub = target_hub
 
-            drone.current_hub = target_hub.name
-            drone.x = target_hub.x
-            drone.y = target_hub.y
+            # for hub in self.graph[drone.current_hub]:
+            #     current_hub = self.mapdata.hubs[hub[0]]
+
+            #     if (
+            #         current_hub.to_end < target_hub.to_end
+            #         and current_hub.drones_setting == 0
+            #     ) or current_hub.hub_type == "end_hub":
+
+            #
+            #         target_hub = current_hub
+            #         target_hub.drones_setting += 1
+            #         self.mapdata.hubs[drone.current_hub].drones_setting -= 1
+
+            # drone.current_hub = target_hub.name
+            # drone.x = target_hub.x
+            # drone.y = target_hub.y
 
     def init_drones(self) -> None:
 
@@ -133,7 +119,6 @@ class Simulator:
                 Drone(
                     drone_id + 1,
                     coordinates,
-                    start_hub,
                     # self.get_random_color(),
                     # "grey",
                 )

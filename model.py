@@ -109,11 +109,12 @@ class MapData:
 
 class Drone:
 
-    def __init__(self, id: int, coordinates: tuple[int, int], start_hub: str) -> None:
+    def __init__(self, id: int, coordinates: tuple[int, int]) -> None:
 
         self.id = id
         self.x, self.y = coordinates
-        self.current_hub: str = start_hub
+        self.path_idx: int = 0
+
         # img = pygame.image.load(DRONE_IMG)
         # img = pygame.transform.rotate(img, -90)
         # self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
