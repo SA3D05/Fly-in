@@ -64,7 +64,6 @@ if __name__ == "__main__":
 
     sim.init_graph()
     # sim.solve()
-    sim.new_solve()
 
     # implement the new algo
 

@@ -53,8 +53,9 @@ class Display:
                         pygame.quit()
                         sys.exit()
                     elif event.key == pygame.K_SPACE:
-                        self.move += 1
-                        self.sim.move(self.move)
+                        # self.move += 1
+                        # self.sim.move(self.move)
+                        self.sim.new_solve()
 
             # draw hubs
             self.redraw()

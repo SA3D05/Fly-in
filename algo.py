@@ -38,52 +38,29 @@ class Simulator:
         # pprint({h.name: h.to_end for h in self.mapdata.hubs.values()})
 
     def new_solve(self):
+        # implement dfs
+        stack = [([self.mapdata.get_start_hub().name], 0)]
 
-        stack: list[tuple[str, int]] = [
-            (self.mapdata.get_start_hub().name, 0),
-        ]
-        paths: dict[str, list[str]] = {"path_1": []}
-        paths_moves: dict[str, int] = {"path_1": 0}
-
-        path_idx: int = 1
+        paths = []
         while stack:
-            current_hub, current_move = stack.pop()
 
-            paths.setdefault(f"path_{path_idx}", []).append(current_hub)
-            print("add next hub")
-            paths_moves[f"path_{path_idx}"] = (
-                paths_moves.get(f"path_{path_idx}", 0) + current_move
-            )
-            print("increment moves")
+            print(stack)
+            input()
+            path, move = stack.pop()
+            current_hub = path[-1]
 
             if current_hub == "goal":
-                print("move to other path")
-                path_idx += 1
+                paths.append(
+                    {
+                        "move": move,
+                        "path": path,
+                    }
+                )
                 continue
-
-            if len(self.graph[current_hub]) > 1:
-                print("Add another path")
-                for idx in range(len(self.graph[current_hub]) - 1):
-
-                    paths[f"path_{path_idx + idx + 1}"] = paths[f"path_{path_idx}"]
-
-                    paths_moves[f"path_{path_idx + idx + 1}"] = paths_moves[
-                        f"path_{path_idx}"
-                    ]
-
-                    print(paths[f"path_{path_idx}"])
-
-            for neighbor in self.graph[current_hub]:
-                stack.append(neighbor)
-
-            print("=== DEB ===")
-            pprint(paths)
-            pprint(paths_moves)
-            input()
-        print("=== DEB ===")
-        pprint(paths)
-        pprint(paths_moves)
-        input()
+            for neighbor, cost in self.graph[current_hub]:
+                if neighbor not in path:
+                    stack.append((path + [neighbor], cost + move))
+        print(paths)
 
     # p = {
     # start : [dist_gate1]
@@ -105,7 +82,12 @@ class Simulator:
                     cost[self.mapdata.hubs[c.hub_to].zone_type],
                 ),
             )
-
+            self.graph.setdefault(c.hub_to, []).append(
+                (
+                    c.hub_from,
+                    cost[self.mapdata.hubs[c.hub_from].zone_type],
+                ),
+            )
         pprint(self.graph)
 
     def move(self, move: int) -> None:
