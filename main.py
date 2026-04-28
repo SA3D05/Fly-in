@@ -65,6 +65,9 @@ if __name__ == "__main__":
     mapdata: MapData = MapData()
     mapdata.build_obj(raw_data)
 
+    print("n_vertical:", mapdata.vertical_hubs_number)
+    print("n_horizontal:", mapdata.horizontal_hubs_number)
+
     sim: Simulator = Simulator(mapdata)
 
     sim.init_graph()
@@ -75,6 +78,6 @@ if __name__ == "__main__":
 
     sim.init_drones()
 
-    display: Display = Display(sim, MAP_FILE)
+    display: Display = Display(sim, MAP_FILE, mapdata)
 
     display.game_loop()

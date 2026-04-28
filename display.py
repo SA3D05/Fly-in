@@ -6,17 +6,17 @@ import sys
 from algo import Simulator
 from globals import *
 
-from model import Connection, Hub, Drone
+from model import Connection, Hub, Drone, MapData
 
 
 class Display:
 
-    def __init__(self, sim: Simulator, map_file_name: str) -> None:
+    def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
 
         self.window = pygame.display.set_mode(
             (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
         )
-
+        self.mapdata = mapdata
         self.hubs: list[Hub] = [hub for hub in sim.mapdata.hubs.values()]
         self.connections: list[Connection] = sim.mapdata.connections
         self.drones: list[Drone] = sim.drones
@@ -53,7 +53,6 @@ class Display:
     def redraw(
         self,
     ) -> None:
-        # pygame.draw.line(surface, color, start_pos, end_pos, width=1)
         self.window.fill("black")
 
         self.draw_connections()
@@ -82,6 +81,13 @@ class Display:
             )
 
     def draw_connections(self):
+        pygame.draw.line(
+            self.window,
+            CONNECTION_LINE_COLOR,
+            (1920 / 2, 0),
+            (1920 / 2, 1080),
+            CONNECTION_LINE_SIZE,
+        )
         for c in self.connections:
             pygame.draw.line(
                 self.window,
@@ -110,8 +116,11 @@ class Display:
             )
 
     def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
+        n = self.mapdata.horizontal_hubs_number
+        gap = 100
+        HORIZONTAL_SHIFT = (SCREEN_WIDTH - (n * ((HUB_SIZE / 2) + gap) - gap)) / 2
         return (
-            x * (100 + HUB_GAP_HORIZONTAL) + HORIZONTAL_SHIFT,
+            x * (n + 3 + gap) + HORIZONTAL_SHIFT,
             (
                 y * (100 + HUB_GAP_VERTICAL)
                 + VERTICAL_SHIFT

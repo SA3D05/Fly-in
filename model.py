@@ -41,9 +41,7 @@ class Hub:
         self.zone_type = zone_type
 
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
-        self.text_surf = self.text_base.render(
-            f"{name}-{zone_type}", True, "white", "black"
-        )
+        self.text_surf = self.text_base.render(f"{name}", True, "white", "black")
 
         self.to_end = 0
         self.drones_setting = 0
@@ -61,6 +59,8 @@ class MapData:
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
         self.drones_number: int = 0
+        self.vertical_hubs_number: int = 1
+        self.horizontal_hubs_number: int = 1
 
     def get_start_hub(self) -> Hub:
         if self.start_hub is None:
@@ -86,6 +86,8 @@ class MapData:
                 hub["type"],
                 hub["zone"],
             )
+            self.vertical_hubs_number = max(self.vertical_hubs_number, hub["y"] + 1)
+            self.horizontal_hubs_number = max(self.horizontal_hubs_number, hub["x"] + 1)
 
             if hub["type"] == "start_hub":
                 self.start_hub = self.hubs[hub["name"]]
