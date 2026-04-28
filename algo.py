@@ -1,7 +1,7 @@
 from pprint import pprint
 import random
 
-from model import Drone, MapData
+from model import Drone, Hub, MapData
 
 
 class Simulator:
@@ -41,23 +41,24 @@ class Simulator:
         self.path = min(paths, key=lambda x: x["move"])["path"]
 
     def init_graph(self) -> None:
-        cost = {
+        type_cost = {
             "normal": 1,
             "blocked": -1,
             "restricted": 2,
             "priority": 0,
         }
+
         for c in self.mapdata.connections:
             self.graph.setdefault(c.hub_from, []).append(
                 (
                     c.hub_to,
-                    cost[self.mapdata.hubs[c.hub_to].zone_type],
+                    type_cost[self.mapdata.hubs[c.hub_to].zone_type],
                 ),
             )
             self.graph.setdefault(c.hub_to, []).append(
                 (
                     c.hub_from,
-                    cost[self.mapdata.hubs[c.hub_from].zone_type],
+                    type_cost[self.mapdata.hubs[c.hub_from].zone_type],
                 ),
             )
 

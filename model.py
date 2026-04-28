@@ -40,12 +40,10 @@ class Hub:
         self.hub_type = hub_type
         self.zone_type = zone_type
 
-        self.surf = pygame.Surface((HUB_SIZE, HUB_SIZE))
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
         self.text_surf = self.text_base.render(
             f"{name}-{zone_type}", True, "white", "black"
         )
-        self.surf.fill(color)
 
         self.to_end = 0
         self.drones_setting = 0
@@ -115,12 +113,16 @@ class Drone:
         self.x, self.y = coordinates
         self.path_idx: int = 0
 
-        # img = pygame.image.load(DRONE_IMG)
-        # img = pygame.transform.rotate(img, -90)
-        # self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
+        img = pygame.image.load(DRONE_IMG)
+        img = pygame.transform.rotate(img, -90)
+        self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
 
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, DRONE_SIZE)
-        self.surf = self.text_base.render(f"{id}", True, "black")
+        # self.surf = self.text_base.render(
+        #     f"{id}",
+        #     True,
+        #     "white",
+        # )
 
         self.reach_goal: bool = False
 

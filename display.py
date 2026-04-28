@@ -23,27 +23,13 @@ class Display:
         self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
 
-        # ========== those just for debugging ================
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
-        self.fps_surf = self.text.render("0", False, "white")
-        self.frametime_surf = self.text.render("0", False, "white")
         self.map_file = self.text.render(map_file_name, False, "white", "black")
-        self.current_frametime = 0
-        # =============================================
+
         self.move = 0
 
     def game_loop(self) -> None:
         while True:
-
-            # fps
-            self.fps_surf = self.text.render(
-                f"fps: {self.clock.get_fps():.0f}", False, "white"
-            )
-
-            # frame time
-            self.frametime_surf = self.text.render(
-                f"ft: {self.current_frametime:.0f}", False, "white"
-            )
 
             # check end window to exit
             for event in pygame.event.get():
@@ -73,8 +59,7 @@ class Display:
         self.draw_connections()
         self.draw_hubs()
         self.draw_drones()
-        self.window.blit(self.fps_surf, (0, 0))
-        self.window.blit(self.frametime_surf, (0, 50))
+
         self.window.blit(
             self.map_file,
             self.map_file.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)),
@@ -109,10 +94,11 @@ class Display:
     def draw_hubs(self):
         for hub in self.hubs:
 
-            # display hub
-            self.window.blit(
-                hub.surf,
-                hub.surf.get_rect(center=self.get_correct_coordinates(hub.x, hub.y)),
+            pygame.draw.circle(
+                self.window,
+                hub.color,
+                self.get_correct_coordinates(hub.x, hub.y),
+                HUB_SIZE,
             )
 
             # display hub text
