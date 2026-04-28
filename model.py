@@ -43,7 +43,7 @@ class Hub:
         self.surf = pygame.Surface((HUB_SIZE, HUB_SIZE))
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
         self.text_surf = self.text_base.render(
-            f"{name}-{zone_type}", True, "black", "white"
+            f"{name}-{zone_type}", True, "white", "black"
         )
         self.surf.fill(color)
 

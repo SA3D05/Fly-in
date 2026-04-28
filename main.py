@@ -1,13 +1,14 @@
 #!.venv/bin/python3
 
 import os
+
+# hide pygame hello message
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 from pprint import pprint
 from display import Display
 from globals import MAP_FILE
 
 
-# hide pygame hello message
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 import sys
 from algo import Simulator

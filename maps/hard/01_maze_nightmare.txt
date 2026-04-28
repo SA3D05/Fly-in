@@ -15,8 +15,8 @@ hub: trap_loop1 3 0 [zone=restricted color=orange]
 hub: trap_loop2 3 2 [zone=restricted color=orange]
 hub: bottleneck 4 1 [color=yellow max_drones=2]
 hub: final_stretch1 5 0 [zone=priority color=cyan]
-hub: final_stretch2 5 1 [zone=priority color=cyan]
-hub: final_stretch3 5 2 [zone=priority color=cyan]
+hub: final_stretch2 5 1 [color=cyan]
+hub: final_stretch3 5 2 [color=cyan]
 end_hub: goal 6 1 [color=green max_drones=8]
 
 # Main path connections
