@@ -88,6 +88,13 @@ class Display:
             (1920 / 2, 1080),
             CONNECTION_LINE_SIZE,
         )
+        pygame.draw.line(
+            self.window,
+            CONNECTION_LINE_COLOR,
+            (0, 1080 / 2),
+            (1920, 1080 / 2),
+            CONNECTION_LINE_SIZE,
+        )
         for c in self.connections:
             pygame.draw.line(
                 self.window,
@@ -116,15 +123,16 @@ class Display:
             )
 
     def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
-        n = self.mapdata.horizontal_hubs_number
-        gap = 100
-        HORIZONTAL_SHIFT = (SCREEN_WIDTH - (n * ((HUB_SIZE / 2) + gap) - gap)) / 2
+        h_n = self.mapdata.horizontal_hubs_number
+        v_n = self.mapdata.vertical_hubs_number
+
+        h_gap = 200
+        v_gap = 200
+
+        HORIZONTAL_SHIFT = (SCREEN_WIDTH - (h_n * ((HUB_SIZE / 2) + h_gap) - h_gap)) / 2
+        VERTICAL_SHIFT = (SCREEN_HEIGHT - (v_n * ((HUB_SIZE / 2) + v_gap) - v_gap)) / 2
+
         return (
-            x * (n + 3 + gap) + HORIZONTAL_SHIFT,
-            (
-                y * (100 + HUB_GAP_VERTICAL)
-                + VERTICAL_SHIFT
-                + HUB_GAP_VERTICAL
-                + (HUB_SIZE + 20 if is_text else 0)
-            ),
+            x * h_gap + HORIZONTAL_SHIFT + HUB_SIZE,
+            y * v_gap + VERTICAL_SHIFT + HUB_SIZE,
         )

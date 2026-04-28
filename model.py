@@ -1,4 +1,4 @@
-from globals import DRONE_IMG, DRONE_SIZE, FONT_FAMILY_PATH, HUB_NAME_SIZE, HUB_SIZE
+from globals import *
 import pygame
 
 
@@ -86,9 +86,6 @@ class MapData:
                 hub["type"],
                 hub["zone"],
             )
-            self.vertical_hubs_number = max(self.vertical_hubs_number, hub["y"] + 1)
-            self.horizontal_hubs_number = max(self.horizontal_hubs_number, hub["x"] + 1)
-
             if hub["type"] == "start_hub":
                 self.start_hub = self.hubs[hub["name"]]
             elif hub["type"] == "end_hub":
@@ -104,7 +101,32 @@ class MapData:
                     c["max_link_capacity"],
                 )
             )
+
         self.graph: dict = {}
+        self.get_v_h_hub_numbers()
+
+    def get_v_h_hub_numbers(self):
+        max_x = 0
+        min_x = 0
+
+        max_y = 0
+        min_y = 0
+
+        for hub in self.hubs.values():
+            max_x = max(hub.x, max_x)
+            min_x = min(hub.x, min_x)
+            max_y = max(hub.y, max_y)
+            min_y = min(hub.y, min_y)
+
+        v = 0
+        for _ in range(min_y, max_y + 1):
+            v += 1
+
+        h = 0
+        for _ in range(min_x, max_x + 1):
+            h += 1
+        self.vertical_hubs_number = v
+        self.horizontal_hubs_number = h
 
 
 class Drone:
