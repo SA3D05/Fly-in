@@ -9,6 +9,25 @@ from globals import *
 from model import Connection, Hub, Drone, MapData
 
 
+class MenuWindow:
+    def __init__(self, margin: int) -> None:
+
+        self.horizontal_size = SCREEN_WIDTH * 0.25 - margin * 2
+        self.vertical_size = SCREEN_HEIGHT - (margin * 2)
+        self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
+        self.surf.fill("grey")
+
+
+class SimWindow:
+    def __init__(self, margin: int) -> None:
+
+        self.horizontal_size = SCREEN_WIDTH * 0.75 - margin * 2
+        self.vertical_size = SCREEN_HEIGHT - (margin * 2)
+
+        self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
+        self.surf.fill("red")
+
+
 class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
@@ -22,6 +41,11 @@ class Display:
         self.drones: list[Drone] = sim.drones
         self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
+
+        self.margin = 50
+
+        self.menu = MenuWindow(self.margin)
+        self.sim_window = SimWindow(self.margin)
 
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
         self.map_file = self.text.render(map_file_name, False, "white", "black")
@@ -58,13 +82,20 @@ class Display:
         self.draw_connections()
         self.draw_hubs()
         self.draw_drones()
-
+        self.draw_menu()
         self.window.blit(
             self.map_file,
             self.map_file.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 100)),
         )
 
         pygame.display.update()
+
+    def draw_menu(self):
+        self.window.blit(self.menu.surf, (self.margin, self.margin))
+        self.window.blit(
+            self.sim_window.surf,
+            (self.margin + self.menu.horizontal_size + self.margin, self.margin),
+        )
 
     def get_random_coordinates(self, coordinates: tuple) -> tuple:
         return tuple(c + random.randint(0, 3) for c in coordinates)
