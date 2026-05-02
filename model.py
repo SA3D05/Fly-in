@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from globals import *
 import pygame
 
@@ -127,6 +129,7 @@ class MapData:
             h += 1
         self.vertical_hubs_number = v
         self.horizontal_hubs_number = h
+        pprint(self.__dict__)
 
 
 class Drone:

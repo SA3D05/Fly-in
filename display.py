@@ -46,34 +46,44 @@ class Display:
 
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
         self.map_file = self.text.render(map_file_name, False, "white", "black")
-        self.fps = 60
-
         self.move = 0
 
-    def check_key_events(self):
+    def _dispose(self):
+        pygame.quit()
+        sys.exit()
+
+    def __manage_pressed_event(self):
+
+        match self.menu.sections[self.menu.selected_section].text:
+            case "Exit":
+                self._dispose()
+
+            case "Solve":
+                self.move += 1
+                self.sim.move(self.move)
+
+    def __check_key_events(self):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                self._dispose()
+
             elif event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_q:
-                        pygame.quit()
-                        sys.exit()
+                        self._dispose()
 
                     case pygame.K_UP:
                         self.menu.move_up()
+
                     case pygame.K_DOWN:
                         self.menu.move_down()
+
                     case pygame.K_RETURN:
-                        match self.menu.sections[self.menu.selected_section].text:
-                            case "Exit":
-                                pygame.quit()
-                                sys.exit()
-                            case "Solve":
-                                self.move += 1
-                                self.sim.move(self.move)
+                        self.__manage_pressed_event()
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                self.__manage_pressed_event()
 
             elif event.type == pygame.MOUSEMOTION:
 
@@ -88,49 +98,36 @@ class Display:
                     ):
                         self.menu.change_selected_section(section.index)
 
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                print("OK")
-                match self.menu.sections[self.menu.selected_section].text:
-                    case "Exit":
-                        pygame.quit()
-                        sys.exit()
-                    case "Solve":
-                        self.move += 1
-                        self.sim.move(self.move)
-
     def game_loop(self) -> None:
         while True:
 
             self.clock.tick(0)
-            self.fps = self.clock.get_fps()
 
-            self.check_key_events()
-            self.redraw()
+            self.__check_key_events()
+            self._redraw()
 
-            # set current frame time
-
-    def redraw(
+    def _redraw(
         self,
     ) -> None:
         self.window.fill("black")
 
-        self.draw_connections()
-        self.draw_hubs()
-        self.draw_drones()
-        self.draw_mapfile_name()
+        self._draw_connections()
+        self._draw_hubs()
+        self._draw_drones()
+        self._draw_mapfile_name()
 
-        self.draw_interface()
-        self.draw_debug_lines()
+        self._draw_interface()
+        self._draw_debug_lines()
 
         pygame.display.update()
 
-    def draw_mapfile_name(self):
+    def _draw_mapfile_name(self):
         self.window.blit(
             self.map_file,
             self.map_file.get_rect(midbottom=(SCREEN_WIDTH // 2, SCREEN_HEIGHT)),
         )
 
-    def draw_debug_lines(self):
+    def _draw_debug_lines(self):
         pygame.draw.line(
             self.window,
             CONNECTION_LINE_COLOR,
@@ -146,7 +143,7 @@ class Display:
             CONNECTION_LINE_SIZE,
         )
 
-    def draw_interface(self):
+    def _draw_interface(self):
 
         # menu part
         pygame.draw.rect(
@@ -180,60 +177,61 @@ class Display:
 
             self.window.blit(section.text_surf, section.text_rect)
 
-    def get_random_coordinates(self, coordinates: tuple) -> tuple:
+    def __get_random_coordinates(self, coordinates: tuple) -> tuple:
         return tuple(c + random.randint(0, 3) for c in coordinates)
 
-    def draw_drones(self):
+    def _draw_drones(self):
         for drone in self.drones:
             self.window.blit(
                 drone.surf,
                 drone.surf.get_rect(
-                    center=self.get_random_coordinates(
-                        self.get_correct_coordinates(drone.x, drone.y)
+                    center=self.__get_random_coordinates(
+                        self.__get_correct_coordinates(drone.x, drone.y)
                     ),
                 ),
             )
 
-    def draw_connections(self):
+    def _draw_connections(self):
 
         for c in self.mapdata.connections:
             pygame.draw.line(
                 self.window,
                 CONNECTION_LINE_COLOR,
-                self.get_correct_coordinates(*c.start_pos),
-                self.get_correct_coordinates(*c.end_pos),
+                self.__get_correct_coordinates(*c.start_pos),
+                self.__get_correct_coordinates(*c.end_pos),
                 CONNECTION_LINE_SIZE,
             )
 
-    def draw_hubs(self):
+    def _draw_hubs(self):
+
         for hub in self.mapdata.hubs.values():
 
             pygame.draw.circle(
                 self.window,
                 hub.color,
-                self.get_correct_coordinates(hub.x, hub.y),
-                HUB_SIZE,
+                self.__get_correct_coordinates(hub.x, hub.y),
+                30,
             )
 
             # display hub text
             self.window.blit(
                 hub.text_surf,
                 hub.text_surf.get_rect(
-                    center=self.get_correct_coordinates(hub.x, hub.y, True)
+                    center=self.__get_correct_coordinates(hub.x, hub.y, True)
                 ),
             )
 
-    def get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
-        h_n = self.mapdata.horizontal_hubs_number
-        v_n = self.mapdata.vertical_hubs_number
+    def __get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
+        horizontal_hubs = self.mapdata.horizontal_hubs_number
+        vertical_hubs = self.mapdata.vertical_hubs_number
 
-        h_gap = 200
-        v_gap = 200
+        horizontal_gap = (self.sim_window.horizontal_size) // horizontal_hubs
+        vertical_gap = (self.sim_window.vertical_size) // vertical_hubs
 
-        HORIZONTAL_SHIFT = (SCREEN_WIDTH - (h_n * ((HUB_SIZE / 2) + h_gap) - h_gap)) / 2
-        VERTICAL_SHIFT = (SCREEN_HEIGHT - (v_n * ((HUB_SIZE / 2) + v_gap) - v_gap)) / 2
+        HORIZONTAL_SHIFT = self.sim_window.rect.left
+        VERTICAL_SHIFT = self.sim_window.rect.centery
 
         return (
-            x * h_gap + HORIZONTAL_SHIFT + HUB_SIZE,
-            y * v_gap + VERTICAL_SHIFT + HUB_SIZE,
+            x * horizontal_gap + HORIZONTAL_SHIFT,
+            y * vertical_gap + VERTICAL_SHIFT,
         )
