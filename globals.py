@@ -11,7 +11,7 @@ DRONE_SIZE = 50
 DRONE_IMG = "assets/spaceship.png"
 MAP_FILE = "maps/challenger/01_the_impossible_dream.txt"
 
-CONNECTION_LINE_SIZE = 5
+CONNECTION_LINE_SIZE = 1
 CONNECTION_LINE_COLOR = "white"
 
 HUB_GAP_HORIZONTAL = 0
