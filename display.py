@@ -24,19 +24,28 @@ class Display:
 
         self.clock = pygame.time.Clock()
 
-        self.horizontal_margin = 10
-        self.vertical_margin = 50
+        self.horizontal_margin = 50
+        self.vertical_margin = 100
 
         self.menu = MenuWindow(
+            (self.horizontal_margin, self.vertical_margin),
             self.horizontal_margin,
             self.vertical_margin,
         )
+
         self.menu.init_sections()
 
-        self.sim_window = SimWindow(self.horizontal_margin, self.vertical_margin)
+        self.sim_window = SimWindow(
+            (
+                self.menu.horizontal_size + (self.horizontal_margin * 3),
+                self.vertical_margin,
+            ),
+            self.horizontal_margin,
+            self.vertical_margin,
+        )
 
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
-        self.map_file = self.text.render(map_file_name, True, "white", "black")
+        self.map_file = self.text.render(map_file_name, False, "white", "black")
         self.fps = 60
 
         self.move = 0
@@ -52,18 +61,47 @@ class Display:
                     case pygame.K_q:
                         pygame.quit()
                         sys.exit()
-                    case pygame.K_SPACE:
-                        self.move += 1
-                        self.sim.move(self.move)
+
                     case pygame.K_UP:
                         self.menu.move_up()
                     case pygame.K_DOWN:
                         self.menu.move_down()
+                    case pygame.K_RETURN:
+                        match self.menu.sections[self.menu.selected_section].text:
+                            case "Exit":
+                                pygame.quit()
+                                sys.exit()
+                            case "Solve":
+                                self.move += 1
+                                self.sim.move(self.move)
+
+            elif event.type == pygame.MOUSEMOTION:
+
+                mouse_x, mouse_y = event.pos
+                for section in self.menu.sections:
+                    if (
+                        mouse_x >= section.x_pos
+                        and mouse_x <= section.x_pos + section.horizontal_size
+                    ) and (
+                        mouse_y >= section.y_pos
+                        and mouse_y <= section.y_pos + section.vertical_size
+                    ):
+                        self.menu.change_selected_section(section.index)
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                print("OK")
+                match self.menu.sections[self.menu.selected_section].text:
+                    case "Exit":
+                        pygame.quit()
+                        sys.exit()
+                    case "Solve":
+                        self.move += 1
+                        self.sim.move(self.move)
 
     def game_loop(self) -> None:
         while True:
 
-            self.clock.tick(60)
+            self.clock.tick(0)
             self.fps = self.clock.get_fps()
 
             self.check_key_events()
@@ -76,21 +114,20 @@ class Display:
     ) -> None:
         self.window.fill("black")
 
-        # self.draw_connections()
-        # self.draw_hubs()
-        # self.draw_drones()
+        self.draw_connections()
+        self.draw_hubs()
+        self.draw_drones()
         self.draw_mapfile_name()
 
-        self.draw_menu()
+        self.draw_interface()
         self.draw_debug_lines()
 
         pygame.display.update()
 
     def draw_mapfile_name(self):
-        self.map_file = self.text.render(f"{self.fps:.0f}", True, "white", "black")
         self.window.blit(
             self.map_file,
-            self.map_file.get_rect(topleft=(0, 0)),
+            self.map_file.get_rect(midbottom=(SCREEN_WIDTH // 2, SCREEN_HEIGHT)),
         )
 
     def draw_debug_lines(self):
@@ -109,15 +146,13 @@ class Display:
             CONNECTION_LINE_SIZE,
         )
 
-    def draw_menu(self):
+    def draw_interface(self):
 
         # menu part
         pygame.draw.rect(
             self.window,
-            "red",
-            self.menu.surf.get_rect(
-                topleft=(self.horizontal_margin, self.vertical_margin)
-            ),
+            "white",
+            self.menu.surf.get_rect(topleft=(self.menu.x_pos, self.menu.y_pos)),
             5,
             10,
         )
@@ -125,63 +160,25 @@ class Display:
         # graph part
         pygame.draw.rect(
             self.window,
-            "blue",
-            self.sim_window.surf.get_rect(
-                topleft=(
-                    self.menu.horizontal_size + (self.horizontal_margin * 3),
-                    self.vertical_margin,
-                ),
-            ),
+            "white",
+            self.sim_window.rect,
             5,
             10,
         )
 
-        mouse_x, mouse_y = pygame.mouse.get_pos()
         # sections part
         for section in self.menu.sections:
-
-            section_x = self.horizontal_margin + self.menu.horizontal_sections_margin
-            section_y = (self.vertical_margin + self.menu.vertical_sections_margin) + (
-                section.index
-                * (section.vertical_size + (self.menu.vertical_sections_margin * 2))
-            )
-
-            if (
-                mouse_x >= section_x and mouse_x <= section_x + section.horizontal_size
-            ) and (
-                mouse_y >= section_y and mouse_y <= section_y + section.vertical_size
-            ):
-                self.menu.change_selected_section(section.index)
-                self.menu.selected_section = section.index
 
             pygame.draw.rect(
                 self.window,
                 section.color,
-                section.surf.get_rect(topleft=(section_x, section_y)),
+                section.rect,
                 0 if self.menu.selected_section == section.index else 5,
-                20,
+                100,
+                20 if self.menu.selected_section == section.index else 100,
             )
-            self.window.blit(
-                section.text_surf,
-                section.text_surf.get_rect(
-                    center=(
-                        (
-                            self.horizontal_margin
-                            + self.menu.horizontal_sections_margin
-                            + section.horizontal_size / 2
-                        ),
-                        (self.vertical_margin + self.menu.vertical_sections_margin)
-                        + (
-                            section.index
-                            * (
-                                section.vertical_size
-                                + (self.menu.vertical_sections_margin * 2)
-                            )
-                        )
-                        + section.vertical_size / 2,
-                    )
-                ),
-            )
+
+            self.window.blit(section.text_surf, section.text_rect)
 
     def get_random_coordinates(self, coordinates: tuple) -> tuple:
         return tuple(c + random.randint(0, 3) for c in coordinates)

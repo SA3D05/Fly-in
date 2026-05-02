@@ -6,30 +6,36 @@ from globals import FONT_FAMILY_PATH, SCREEN_HEIGHT, SCREEN_WIDTH
 class MenuSection:
     def __init__(
         self,
-        horizontal_margin: int,
-        vertical_margin: int,
-        menu_horizontal_size: int,
-        menu_vertical_size: int,
+        coordinates: tuple[int, int],
+        size: tuple[int, int],
         sections_number: int,
         index: int,
         color: str,
         text: str,
     ):
 
-        self.horizontal_size = menu_horizontal_size - horizontal_margin * 2
-        self.vertical_size = (
-            menu_vertical_size - (vertical_margin * 2) * sections_number
-        ) / sections_number
+        self.x_pos, self.y_pos = coordinates
+        self.horizontal_size, self.vertical_size = size
 
         self.index = index
 
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
+        self.rect = self.surf.get_rect(topleft=(self.x_pos, self.y_pos))
+
         self.color = color
 
         self.text = text
         self.font = pygame.font.Font(FONT_FAMILY_PATH, int((SCREEN_WIDTH * 40) // 1920))
         self.text_surf = self.font.render(
-            text, True, "black" if index == 0 else "white"
+            text,
+            True,
+            "black" if index == 0 else "white",
+        )
+        self.text_rect = self.text_surf.get_rect(
+            center=(
+                (self.x_pos + self.horizontal_size // 2),
+                (self.y_pos + self.vertical_size // 2),
+            )
         )
 
     def change_text(self, color: str):
@@ -38,14 +44,21 @@ class MenuSection:
 
 class MenuWindow:
 
-    def __init__(self, horizontal_margin: int, vertical_margin: int) -> None:
+    def __init__(
+        self, coordinates: tuple[int, int], horizontal_margin: int, vertical_margin: int
+    ) -> None:
 
-        self.horizontal_size = SCREEN_WIDTH * 0.25 - horizontal_margin * 2
+        self.x_pos, self.y_pos = coordinates
+
+        self.horizontal_size: int = int(SCREEN_WIDTH * 0.25 - horizontal_margin * 2)
         self.vertical_size = SCREEN_HEIGHT - vertical_margin * 2
+
+        self.horizontal_margin = horizontal_margin
+        self.vertical_margin = vertical_margin
 
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
 
-        self.horizontal_sections_margin = 20
+        self.horizontal_sections_margin = 50
         self.vertical_sections_margin = 50
 
         self.selected_section = 0
@@ -54,15 +67,27 @@ class MenuWindow:
     def init_sections(self):
 
         sections = ["Solve", "Select", "Settings", "Exit"]
-        for i, name in enumerate(sections):
+
+        for index, name in enumerate(sections):
+
+            x_size = self.horizontal_size - (self.horizontal_sections_margin * 2)
+
+            y_size = (
+                self.vertical_size - (self.vertical_sections_margin * 2 * len(sections))
+            ) // len(sections)
+
+            x_pos = self.horizontal_margin + self.horizontal_sections_margin
+
+            y_pos = (self.vertical_margin + self.vertical_sections_margin) + (
+                y_size + self.vertical_sections_margin * 2
+            ) * index
+
             self.sections.append(
                 MenuSection(
-                    self.horizontal_sections_margin,
-                    self.vertical_sections_margin,
-                    self.horizontal_size,
-                    self.vertical_size,
+                    (x_pos, y_pos),
+                    (x_size, y_size),
                     len(sections),
-                    i,
+                    index,
                     "white",
                     name,
                 )
@@ -96,12 +121,19 @@ class MenuWindow:
 
         self.sections[self.selected_section].change_text("white")
         self.sections[section_idx].change_text("black")
+        self.selected_section = section_idx
 
 
 class SimWindow:
-    def __init__(self, horizontal_margin: int, vertical_margin: int) -> None:
+    def __init__(
+        self, coordinates: tuple[int, int], horizontal_margin: int, vertical_margin: int
+    ) -> None:
 
         self.horizontal_size = SCREEN_WIDTH * 0.75 - horizontal_margin * 2
         self.vertical_size = SCREEN_HEIGHT - vertical_margin * 2
+        self.x_pos, self.y_pos = coordinates
 
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
+        self.rect = self.surf.get_rect(
+            topleft=(self.x_pos, self.y_pos),
+        )
