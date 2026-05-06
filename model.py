@@ -41,9 +41,9 @@ class Hub:
         self.max_drones = max_drones
         self.hub_type = hub_type
         self.zone_type = zone_type
-
-        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, HUB_NAME_SIZE)
-        self.text_surf = self.text_base.render(f"{name}", True, "white", "black")
+        self.surf: None | pygame.surface.Surface = None
+        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, 20)
+        self.text_surf = self.text_base.render(f"{name}", True, "white")
 
         self.to_end = 0
         self.drones_setting = 0
@@ -61,8 +61,6 @@ class MapData:
         self.start_hub: Hub | None = None
         self.end_hub: Hub | None = None
         self.drones_number: int = 0
-        self.vertical_hubs_number: int = 1
-        self.horizontal_hubs_number: int = 1
 
     def get_start_hub(self) -> Hub:
         if self.start_hub is None:
@@ -105,31 +103,6 @@ class MapData:
             )
 
         self.graph: dict = {}
-        self.get_v_h_hub_numbers()
-
-    def get_v_h_hub_numbers(self):
-        max_x = 0
-        min_x = 0
-
-        max_y = 0
-        min_y = 0
-
-        for hub in self.hubs.values():
-            max_x = max(hub.x, max_x)
-            min_x = min(hub.x, min_x)
-            max_y = max(hub.y, max_y)
-            min_y = min(hub.y, min_y)
-
-        v = 0
-        for _ in range(min_y, max_y + 1):
-            v += 1
-
-        h = 0
-        for _ in range(min_x, max_x + 1):
-            h += 1
-        self.vertical_hubs_number = v
-        self.horizontal_hubs_number = h
-        pprint(self.__dict__)
 
 
 class Drone:
@@ -140,9 +113,8 @@ class Drone:
         self.x, self.y = coordinates
         self.path_idx: int = 0
 
-        img = pygame.image.load(DRONE_IMG)
-        img = pygame.transform.rotate(img, -90)
-        self.surf = pygame.transform.smoothscale(img, (DRONE_SIZE, DRONE_SIZE))
+        img = pygame.image.load("assets/drone.png")
+        self.surf = pygame.transform.smoothscale(img, (100, 100))
 
         self.text_base = pygame.font.Font(FONT_FAMILY_PATH, DRONE_SIZE)
         # self.surf = self.text_base.render(

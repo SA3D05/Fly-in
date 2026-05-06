@@ -14,28 +14,39 @@ class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
 
+        self.screen_width, self.screen_height = 1920, 1080
         self.window = pygame.display.set_mode(
-            (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE
+            (self.screen_width, self.screen_height), pygame.RESIZABLE
         )
 
+        print(pygame.display.Info())
         self.mapdata = mapdata
         self.drones: list[Drone] = sim.drones
-        self.sim: Simulator = sim
 
+        for hub in mapdata.hubs.values():
+            img = pygame.image.load("assets/hub.png").convert_alpha()
+            img.fill(hub.color, special_flags=pygame.BLEND_RGBA_MIN)
+            hub.surf = pygame.transform.scale(img, (50, 50))
+
+        self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
 
         self.horizontal_margin = 50
         self.vertical_margin = 100
-
+        self.hub_size = 30
         self.menu = MenuWindow(
+            self.screen_width,
+            self.screen_height,
             (self.horizontal_margin, self.vertical_margin),
             self.horizontal_margin,
             self.vertical_margin,
         )
 
-        self.menu.init_sections()
+        self.menu.init_sections(self.screen_width)
 
         self.sim_window = SimWindow(
+            self.screen_width,
+            self.screen_height,
             (
                 self.menu.horizontal_size + (self.horizontal_margin * 3),
                 self.vertical_margin,
@@ -48,6 +59,9 @@ class Display:
         self.map_file = self.text.render(map_file_name, False, "white", "black")
         self.move = 0
 
+    def _init_screen(self):
+        pass
+
     def _dispose(self):
         pygame.quit()
         sys.exit()
@@ -57,8 +71,8 @@ class Display:
         match self.menu.sections[self.menu.selected_section].text:
             case "Exit":
                 self._dispose()
-
-            case "Solve":
+            # "Forward", "Backward"
+            case "Forward":
                 self.move += 1
                 self.sim.move(self.move)
 
@@ -101,7 +115,7 @@ class Display:
     def game_loop(self) -> None:
         while True:
 
-            self.clock.tick(0)
+            self.clock.tick(30)
 
             self.__check_key_events()
             self._redraw()
@@ -109,7 +123,7 @@ class Display:
     def _redraw(
         self,
     ) -> None:
-        self.window.fill("black")
+        self.window.fill((32, 32, 32))
 
         self._draw_connections()
         self._draw_hubs()
@@ -117,29 +131,32 @@ class Display:
         self._draw_mapfile_name()
 
         self._draw_interface()
-        self._draw_debug_lines()
+        # self._draw_debug_lines()
 
         pygame.display.update()
 
     def _draw_mapfile_name(self):
+
         self.window.blit(
             self.map_file,
-            self.map_file.get_rect(midbottom=(SCREEN_WIDTH // 2, SCREEN_HEIGHT)),
+            self.map_file.get_rect(
+                midbottom=(self.screen_width // 2, self.screen_height)
+            ),
         )
 
     def _draw_debug_lines(self):
         pygame.draw.line(
             self.window,
             CONNECTION_LINE_COLOR,
-            (SCREEN_WIDTH / 2, 0),
-            (SCREEN_WIDTH / 2, SCREEN_HEIGHT),
+            (self.screen_width / 2, 0),
+            (self.screen_width / 2, self.screen_height),
             CONNECTION_LINE_SIZE,
         )
         pygame.draw.line(
             self.window,
             CONNECTION_LINE_COLOR,
-            (0, SCREEN_HEIGHT / 2),
-            (SCREEN_WIDTH, SCREEN_HEIGHT / 2),
+            (0, self.screen_height / 2),
+            (self.screen_width, self.screen_height / 2),
             CONNECTION_LINE_SIZE,
         )
 
@@ -186,7 +203,7 @@ class Display:
                 drone.surf,
                 drone.surf.get_rect(
                     center=self.__get_random_coordinates(
-                        self.__get_correct_coordinates(drone.x, drone.y)
+                        self.__convert_screen_coordinates(drone.x, drone.y)
                     ),
                 ),
             )
@@ -197,41 +214,59 @@ class Display:
             pygame.draw.line(
                 self.window,
                 CONNECTION_LINE_COLOR,
-                self.__get_correct_coordinates(*c.start_pos),
-                self.__get_correct_coordinates(*c.end_pos),
+                self.__convert_screen_coordinates(*c.start_pos),
+                self.__convert_screen_coordinates(*c.end_pos),
                 CONNECTION_LINE_SIZE,
             )
 
     def _draw_hubs(self):
 
+        text_status = True
         for hub in self.mapdata.hubs.values():
 
-            pygame.draw.circle(
-                self.window,
-                hub.color,
-                self.__get_correct_coordinates(hub.x, hub.y),
-                30,
+            if hub.surf is None:
+                return
+            self.window.blit(
+                hub.surf,
+                hub.surf.get_rect(
+                    center=self.__convert_screen_coordinates(hub.x, hub.y)
+                ),
             )
 
             # display hub text
             self.window.blit(
                 hub.text_surf,
                 hub.text_surf.get_rect(
-                    center=self.__get_correct_coordinates(hub.x, hub.y, True)
+                    center=self.__convert_screen_coordinates(
+                        hub.x, hub.y, 1 if text_status else 2
+                    )
                 ),
             )
+            text_status = not text_status
 
-    def __get_correct_coordinates(self, x: int, y: int, is_text: bool = False):
-        horizontal_hubs = self.mapdata.horizontal_hubs_number
-        vertical_hubs = self.mapdata.vertical_hubs_number
+    def __convert_screen_coordinates(self, x, y, is_text=0):
+        padding_x = self.hub_size  # hub radius
+        padding_y = 100  # hub radius
 
-        horizontal_gap = (self.sim_window.horizontal_size) // horizontal_hubs
-        vertical_gap = (self.sim_window.vertical_size) // vertical_hubs
+        min_x = min(hub.x for hub in self.mapdata.hubs.values())
+        max_x = max(hub.x for hub in self.mapdata.hubs.values())
+        min_y = min(hub.y for hub in self.mapdata.hubs.values())
+        max_y = max(hub.y for hub in self.mapdata.hubs.values())
 
-        HORIZONTAL_SHIFT = self.sim_window.rect.left
-        VERTICAL_SHIFT = self.sim_window.rect.centery
+        graph_w = max_x - min_x
+        graph_h = max_y - min_y
 
-        return (
-            x * horizontal_gap + HORIZONTAL_SHIFT,
-            y * vertical_gap + VERTICAL_SHIFT,
-        )
+        draw_w = self.sim_window.rect.width - padding_x * 2
+        draw_h = self.sim_window.rect.height - padding_y * 2
+
+        scale_x = draw_w / graph_w if graph_w != 0 else draw_w
+        scale_y = draw_h / graph_h if graph_h != 0 else draw_h
+
+        screen_x = self.sim_window.rect.left + padding_x + (x - min_x) * scale_x
+        screen_y = self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y
+
+        if is_text == 1:
+            screen_y += 50
+        elif is_text == 2:
+            screen_y -= 50
+        return (int(screen_x), int(screen_y))

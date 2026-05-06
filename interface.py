@@ -1,11 +1,12 @@
 import pygame
 
-from globals import FONT_FAMILY_PATH, SCREEN_HEIGHT, SCREEN_WIDTH
+from globals import FONT_FAMILY_PATH
 
 
 class MenuSection:
     def __init__(
         self,
+        screen_width: int,
         coordinates: tuple[int, int],
         size: tuple[int, int],
         sections_number: int,
@@ -25,7 +26,7 @@ class MenuSection:
         self.color = color
 
         self.text = text
-        self.font = pygame.font.Font(FONT_FAMILY_PATH, int((SCREEN_WIDTH * 40) // 1920))
+        self.font = pygame.font.Font(FONT_FAMILY_PATH, int((screen_width * 40) // 1920))
         self.text_surf = self.font.render(
             text,
             True,
@@ -45,13 +46,18 @@ class MenuSection:
 class MenuWindow:
 
     def __init__(
-        self, coordinates: tuple[int, int], horizontal_margin: int, vertical_margin: int
+        self,
+        screen_width: int,
+        screen_height: int,
+        coordinates: tuple[int, int],
+        horizontal_margin: int,
+        vertical_margin: int,
     ) -> None:
 
         self.x_pos, self.y_pos = coordinates
 
-        self.horizontal_size: int = int(SCREEN_WIDTH * 0.25 - horizontal_margin * 2)
-        self.vertical_size = SCREEN_HEIGHT - vertical_margin * 2
+        self.horizontal_size: int = int(screen_width * 0.25 - horizontal_margin * 2)
+        self.vertical_size = screen_height - vertical_margin * 2
 
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
@@ -64,9 +70,8 @@ class MenuWindow:
         self.selected_section = 0
         self.sections: list[MenuSection] = []
 
-    def init_sections(self):
-
-        sections = ["Solve", "Select", "Settings", "Exit"]
+    def init_sections(self, screen_width: int):
+        sections = ["Start", "Forward", "Backward", "Exit"]
 
         for index, name in enumerate(sections):
 
@@ -84,6 +89,7 @@ class MenuWindow:
 
             self.sections.append(
                 MenuSection(
+                    screen_width,
                     (x_pos, y_pos),
                     (x_size, y_size),
                     len(sections),
@@ -125,12 +131,18 @@ class MenuWindow:
 
 
 class SimWindow:
+
     def __init__(
-        self, coordinates: tuple[int, int], horizontal_margin: int, vertical_margin: int
+        self,
+        screen_width: int,
+        screen_height: int,
+        coordinates: tuple[int, int],
+        horizontal_margin: int,
+        vertical_margin: int,
     ) -> None:
 
-        self.horizontal_size = SCREEN_WIDTH * 0.75 - horizontal_margin * 2
-        self.vertical_size = SCREEN_HEIGHT - vertical_margin * 2
+        self.horizontal_size = screen_width * 0.75 - horizontal_margin * 2
+        self.vertical_size = screen_height - vertical_margin * 2
         self.x_pos, self.y_pos = coordinates
 
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
