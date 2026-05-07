@@ -42,8 +42,8 @@ class Hub:
         self.hub_type = hub_type
         self.zone_type = zone_type
         self.surf: None | pygame.surface.Surface = None
-        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, 20)
-        self.text_surf = self.text_base.render(f"{name}", True, "white")
+        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, 30)
+        self.text_surf = self.text_base.render(f"{name}", True, color)
 
         self.to_end = 0
         self.drones_setting = 0
@@ -74,9 +74,7 @@ class MapData:
 
     def build_obj(self, raw_data: dict) -> None:
         self.drones_number = raw_data["drones_number"]
-
         for hub in raw_data["hubs"]:
-
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
                 hub["x"],

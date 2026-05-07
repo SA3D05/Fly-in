@@ -6,20 +6,18 @@ import sys
 from algo import Simulator
 from globals import *
 
-from model import Connection, Hub, Drone, MapData
+from model import Drone, MapData
 from interface import *
 
 
 class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
-
-        self.screen_width, self.screen_height = 1920, 1080
+        info = pygame.display.Info()
+        self.screen_width, self.screen_height = info.current_w, info.current_h
         self.window = pygame.display.set_mode(
-            (self.screen_width, self.screen_height), pygame.RESIZABLE
+            (self.screen_width, self.screen_height), pygame.FULLSCREEN
         )
-
-        print(pygame.display.Info())
         self.mapdata = mapdata
         self.drones: list[Drone] = sim.drones
 
@@ -56,7 +54,7 @@ class Display:
         )
 
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
-        self.map_file = self.text.render(map_file_name, False, "white", "black")
+        self.map_file = self.text.render(map_file_name, False, "white")
         self.move = 0
 
     def _init_screen(self):
@@ -221,11 +219,12 @@ class Display:
 
     def _draw_hubs(self):
 
-        text_status = True
+        levels = {}
         for hub in self.mapdata.hubs.values():
 
             if hub.surf is None:
                 return
+
             self.window.blit(
                 hub.surf,
                 hub.surf.get_rect(
@@ -233,19 +232,23 @@ class Display:
                 ),
             )
 
+            if levels.get(hub.y) == None:
+                levels[hub.y] = False
+            else:
+                levels[hub.y] = not levels[hub.y]
+
             # display hub text
             self.window.blit(
                 hub.text_surf,
                 hub.text_surf.get_rect(
                     center=self.__convert_screen_coordinates(
-                        hub.x, hub.y, 1 if text_status else 2
+                        hub.x, hub.y, 1 if levels[hub.y] else 2
                     )
                 ),
             )
-            text_status = not text_status
 
     def __convert_screen_coordinates(self, x, y, is_text=0):
-        padding_x = self.hub_size  # hub radius
+        padding_x = self.hub_size * 2  # hub radius
         padding_y = 100  # hub radius
 
         min_x = min(hub.x for hub in self.mapdata.hubs.values())
