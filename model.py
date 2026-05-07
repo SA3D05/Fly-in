@@ -120,8 +120,9 @@ class Drone:
         #     True,
         #     "white",
         # )
-
+        # self.in_re``
         self.reach_goal: bool = False
+        self.is_restricted: bool = False
 
     def get_coordinates(self) -> tuple[int, int]:
         return (self.x, self.y)

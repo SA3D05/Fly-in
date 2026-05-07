@@ -73,6 +73,9 @@ class Simulator:
 
             next_hub = self.path[drone.path_idx + 1]
 
+            # if drone.is_restricted == True:
+            #     drone.is_restricted = False
+
             if self.mapdata.hubs[next_hub].drones_setting == 0 or next_hub == "goal":
                 print(
                     f"Drone '{drone.id}'",
@@ -80,8 +83,16 @@ class Simulator:
                     f"to '{next_hub}'",
                 )
 
+                if (
+                    self.mapdata.hubs[next_hub].zone_type == "restricted"
+                    and not drone.is_restricted
+                ):
+                    drone.is_restricted = True
+                    continue
+
                 self.mapdata.hubs[next_hub].drones_setting += 1
                 self.mapdata.hubs[current_hub].drones_setting -= 1
+
                 drone.path_idx += 1
 
                 drone.x = self.mapdata.hubs[next_hub].x
