@@ -47,6 +47,7 @@ class Hub:
 
         self.to_end = 0
         self.drones_setting = 0
+        self.can_enter = True
 
     def get_coordinates(self) -> tuple[int, int]:
         return (self.x, self.y)
@@ -114,15 +115,11 @@ class Drone:
         img = pygame.image.load("assets/drone.png")
         self.surf = pygame.transform.smoothscale(img, (100, 100))
 
-        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, DRONE_SIZE)
-        # self.surf = self.text_base.render(
-        #     f"{id}",
-        #     True,
-        #     "white",
-        # )
+        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, 50)
+        self.text_surf = self.text_base.render(f"{id}", True, "white")
         # self.in_re``
         self.reach_goal: bool = False
-        self.is_restricted: bool = False
+        self.in_connection: bool = False
 
     def get_coordinates(self) -> tuple[int, int]:
         return (self.x, self.y)

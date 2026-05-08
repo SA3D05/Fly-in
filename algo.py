@@ -68,15 +68,18 @@ class Simulator:
         for drone in self.drones:
 
             current_hub = self.path[drone.path_idx]
+
             if current_hub == "goal":
+                continue
+
+            if drone.in_connection == True:
+                drone.in_connection = False
+                self.mapdata.hubs[current_hub].can_enter = True
                 continue
 
             next_hub = self.path[drone.path_idx + 1]
 
-            # if drone.is_restricted == True:
-            #     drone.is_restricted = False
-
-            if self.mapdata.hubs[next_hub].drones_setting == 0 or next_hub == "goal":
+            if self.mapdata.hubs[next_hub].can_enter == True or next_hub == "goal":
                 print(
                     f"Drone '{drone.id}'",
                     f"go from '{current_hub}'",
@@ -85,13 +88,12 @@ class Simulator:
 
                 if (
                     self.mapdata.hubs[next_hub].zone_type == "restricted"
-                    and not drone.is_restricted
+                    and drone.in_connection == False
                 ):
-                    drone.is_restricted = True
-                    continue
+                    drone.in_connection = True
 
-                self.mapdata.hubs[next_hub].drones_setting += 1
-                self.mapdata.hubs[current_hub].drones_setting -= 1
+                self.mapdata.hubs[next_hub].can_enter = False
+                self.mapdata.hubs[current_hub].can_enter = True
 
                 drone.path_idx += 1
 

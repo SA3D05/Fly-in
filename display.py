@@ -54,11 +54,10 @@ class Display:
         )
 
         self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
-        self.map_file = self.text.render(map_file_name, False, "white")
-        self.move = 0
+        self.map_file_text = self.text.render(map_file_name, False, "white")
+        self.steps_text = self.text.render("Steps: 0", False, "white")
 
-    def _init_screen(self):
-        pass
+        self.step = 0
 
     def _dispose(self):
         pygame.quit()
@@ -71,8 +70,11 @@ class Display:
                 self._dispose()
             # "Forward", "Backward"
             case "Forward":
-                self.move += 1
-                self.sim.move(self.move)
+                self.step += 1
+                self.sim.move(self.step)
+                self.steps_text = self.text.render(
+                    f"Steps: {self.step}", False, "white"
+                )
 
     def __check_key_events(self):
 
@@ -134,10 +136,13 @@ class Display:
         pygame.display.update()
 
     def _draw_mapfile_name(self):
-
         self.window.blit(
-            self.map_file,
-            self.map_file.get_rect(
+            self.steps_text,
+            self.steps_text.get_rect(topright=(self.screen_width, 0)),
+        )
+        self.window.blit(
+            self.map_file_text,
+            self.map_file_text.get_rect(
                 midbottom=(self.screen_width // 2, self.screen_height)
             ),
         )
@@ -193,16 +198,23 @@ class Display:
             self.window.blit(section.text_surf, section.text_rect)
 
     def __get_random_coordinates(self, coordinates: tuple) -> tuple:
-        return tuple(c + random.randint(0, 3) for c in coordinates)
+        return tuple(c + random.randint(-1, 1) for c in coordinates)
 
     def _draw_drones(self):
         for drone in self.drones:
+            x_pos = drone.x - 0.5 if drone.in_connection else drone.x
+
+            x, y = self.__convert_screen_coordinates(x_pos, drone.y)
+
             self.window.blit(
                 drone.surf,
-                drone.surf.get_rect(
-                    center=self.__get_random_coordinates(
-                        self.__convert_screen_coordinates(drone.x, drone.y)
-                    ),
+                drone.surf.get_rect(center=self.__get_random_coordinates((x, y))),
+            )
+
+            self.window.blit(
+                drone.text_surf,
+                drone.text_surf.get_rect(
+                    center=self.__get_random_coordinates((x, y - 100))
                 ),
             )
 
