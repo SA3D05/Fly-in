@@ -202,9 +202,8 @@ class Display:
 
     def _draw_drones(self):
         for drone in self.drones:
-            x_pos = drone.x - 0.5 if drone.in_connection else drone.x
 
-            x, y = self.__convert_screen_coordinates(x_pos, drone.y)
+            x, y = self.__convert_screen_coordinates(drone.x, drone.y)
 
             self.window.blit(
                 drone.surf,

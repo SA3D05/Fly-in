@@ -106,11 +106,12 @@ class MapData:
 
 class Drone:
 
-    def __init__(self, id: int, coordinates: tuple[int, int]) -> None:
+    def __init__(self, id: int, current_hub: str, coordinates: tuple[int, int]) -> None:
 
         self.id = id
-        self.x, self.y = coordinates
-        self.path_idx: int = 0
+        self.x: float = coordinates[0]
+        self.y: float = coordinates[1]
+        self.current_hub: str = current_hub
 
         img = pygame.image.load("assets/drone.png")
         self.surf = pygame.transform.smoothscale(img, (100, 100))
@@ -121,5 +122,5 @@ class Drone:
         self.reach_goal: bool = False
         self.in_connection: bool = False
 
-    def get_coordinates(self) -> tuple[int, int]:
+    def get_coordinates(self) -> tuple[float, float]:
         return (self.x, self.y)

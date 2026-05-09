@@ -17,7 +17,6 @@ from parser import Parser
 from validator import Validator
 from exception_modles import ParsingError, ValidationError
 
-
 if __name__ == "__main__":
 
     maps = [
@@ -67,9 +66,9 @@ if __name__ == "__main__":
     sim: Simulator = Simulator(mapdata)
 
     sim.init_graph()
-    sim.init_path()
+    sim.init_path(mapdata.get_start_hub().name)
 
-    pprint(sim.path)
+    # pprint(sim.path)
     # implement the new algo
 
     sim.init_drones()
