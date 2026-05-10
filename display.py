@@ -14,9 +14,10 @@ class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
         info = pygame.display.Info()
-        self.screen_width, self.screen_height = info.current_w, info.current_h
+        self.screen_width, self.screen_height = (info.current_w, info.current_h)
+
         self.window = pygame.display.set_mode(
-            (self.screen_width, self.screen_height), pygame.FULLSCREEN
+            (self.screen_width, self.screen_height),  # pygame.FULLSCREEN
         )
         self.mapdata = mapdata
         self.drones: list[Drone] = sim.drones
@@ -69,7 +70,7 @@ class Display:
             case "Exit":
                 self._dispose()
             # "Forward", "Backward"
-            case "Forward":
+            case "Start":
                 self.step += 1
                 self.sim.move(self.step)
                 self.steps_text = self.text.render(
@@ -262,10 +263,10 @@ class Display:
         padding_x = self.hub_size * 2  # hub radius
         padding_y = 100  # hub radius
 
-        min_x = min(hub.x for hub in self.mapdata.hubs.values())
         max_x = max(hub.x for hub in self.mapdata.hubs.values())
-        min_y = min(hub.y for hub in self.mapdata.hubs.values())
+        min_x = min(hub.x for hub in self.mapdata.hubs.values())
         max_y = max(hub.y for hub in self.mapdata.hubs.values())
+        min_y = min(hub.y for hub in self.mapdata.hubs.values())
 
         graph_w = max_x - min_x
         graph_h = max_y - min_y

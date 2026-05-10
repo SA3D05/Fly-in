@@ -4,6 +4,7 @@ import os
 
 # hide pygame hello message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+os.environ["SDL_VIDEO_WINDOW_POS"] = "100,100"
 from pprint import pprint
 from display import Display
 from globals import MAP_FILE

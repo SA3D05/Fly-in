@@ -19,6 +19,13 @@ class Connection:
         self.max_link_capacity: int = max_link_capacity
         self.start_pos: tuple[int, int] = start
         self.end_pos: tuple[int, int] = end
+        self.drones_passing: int = 0
+
+    def can_drone_pass(self) -> bool:
+        if self.drones_passing < self.max_link_capacity:
+            return True
+
+        return False
 
 
 class Hub:
@@ -34,23 +41,35 @@ class Hub:
         zone_type: str,  # later make in ZoneType type
     ) -> None:
 
-        self.name = name
-        self.x = x
-        self.y = y
-        self.color = color
-        self.max_drones = max_drones
-        self.hub_type = hub_type
-        self.zone_type = zone_type
-        self.surf: None | pygame.surface.Surface = None
-        self.text_base = pygame.font.Font(FONT_FAMILY_PATH, 30)
-        self.text_surf = self.text_base.render(f"{name}", True, color)
+        self.name: str = name
+        self.x: int = x
+        self.y: int = y
+        self.color: str = color
+        self.max_drones: int = int(max_drones)
 
-        self.to_end = 0
-        self.drones_setting = 0
-        self.can_enter = True
+        self.hub_type: str = hub_type
+        self.zone_type: str = zone_type
+        self.surf: None | pygame.surface.Surface = None
+        self.text_base: pygame.Font = pygame.font.Font(FONT_FAMILY_PATH, 30)
+        self.text_surf: pygame.Surface = self.text_base.render(f"{name}", True, color)
+
+        self.to_end: int = 0
+        self.drones_setting: int = 0
+
+    def is_restricted(self) -> bool:
+        if self.zone_type == "restricted":
+            return True
+        return False
 
     def get_coordinates(self) -> tuple[int, int]:
         return (self.x, self.y)
+
+    def can_enter(self) -> bool:
+        if self.hub_type == "end_hub":
+            return True
+        if self.drones_setting < self.max_drones:
+            return True
+        return False
 
 
 class MapData:
@@ -106,12 +125,12 @@ class MapData:
 
 class Drone:
 
-    def __init__(self, id: int, current_hub: str, coordinates: tuple[int, int]) -> None:
+    def __init__(self, id: int, current_hub: Hub, coordinates: tuple[int, int]) -> None:
 
         self.id = id
         self.x: float = coordinates[0]
         self.y: float = coordinates[1]
-        self.current_hub: str = current_hub
+        self.current_hub: Hub = current_hub
 
         img = pygame.image.load("assets/drone.png")
         self.surf = pygame.transform.smoothscale(img, (100, 100))
@@ -121,6 +140,7 @@ class Drone:
         # self.in_re``
         self.reach_goal: bool = False
         self.in_connection: bool = False
+        self.current_connection: Connection | None = None
 
     def get_coordinates(self) -> tuple[float, float]:
         return (self.x, self.y)
