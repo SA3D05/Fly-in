@@ -17,7 +17,7 @@ class Display:
         self.screen_width, self.screen_height = (info.current_w, info.current_h)
 
         self.window = pygame.display.set_mode(
-            (self.screen_width, self.screen_height),  # pygame.FULLSCREEN
+            (self.screen_width, self.screen_height), pygame.FULLSCREEN
         )
         self.mapdata = mapdata
         self.drones: list[Drone] = sim.drones

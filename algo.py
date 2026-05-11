@@ -2,7 +2,7 @@ from pprint import pprint
 import random
 import sys
 
-from model import Connection, Drone, Hub, MapData
+from model import Connection, Drone, Hub, HubType, MapData, ZoneType
 
 
 class Simulator:
@@ -10,21 +10,21 @@ class Simulator:
     def __init__(self, mapdata: MapData) -> None:
 
         self.mapdata: MapData = mapdata
-        self.graph: dict[str, list[tuple[str, int]]] = {}
+        self.graph: dict[Hub, list[tuple[Hub, int]]] = {}
         self.drones: list[Drone] = []
         self.paths: list[list[str]] = []
 
-    def init_path(self, start: str):
+    def init_path(self):
         # implement dfs
-        stack = [([start], 0)]
+        stack: list[tuple[list[Hub], int]] = [([self.mapdata.get_start_hub()], 0)]
         paths = []
 
         while stack:
 
             path, move = stack.pop()
-            current_hub = path[-1]
+            current_hub: Hub = path[-1]
 
-            if current_hub == "goal":
+            if current_hub.hub_type == HubType.END:
 
                 paths.append(
                     {
@@ -42,26 +42,27 @@ class Simulator:
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
 
         self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
+        print("path found", len(self.paths))
 
     def init_graph(self) -> None:
         type_cost = {
-            "normal": 1,
-            "blocked": -1,
-            "restricted": 2,
-            "priority": 0,
+            ZoneType.NORMAL: 1,
+            ZoneType.BLOCKED: -1,
+            ZoneType.RESTRICTED: 2,
+            ZoneType.PRIORITY: 0,
         }
 
         for c in self.mapdata.connections:
             self.graph.setdefault(c.hub_from, []).append(
                 (
                     c.hub_to,
-                    type_cost[self.mapdata.hubs[c.hub_to].zone_type],
+                    type_cost[self.mapdata.hubs[c.hub_to.name].zone_type],
                 ),
             )
             self.graph.setdefault(c.hub_to, []).append(
                 (
                     c.hub_from,
-                    type_cost[self.mapdata.hubs[c.hub_from].zone_type],
+                    type_cost[self.mapdata.hubs[c.hub_from.name].zone_type],
                 ),
             )
 
@@ -98,12 +99,14 @@ class Simulator:
                     if c.hub_from == current_hub.name and c.hub_to == targert_hub.name:
                         current_connction = c
 
-                if targert_hub.can_enter():
-                    if (
-                        current_connction is not None
-                        and current_connction.can_drone_pass()
-                    ):
-                        break
+                if targert_hub.can_enter() == False:
+                    continue
+                if (
+                    current_connction is not None
+                    and current_connction.can_drone_pass() == False
+                ):
+                    continue
+                break
 
             if drone.in_connection == True:
 

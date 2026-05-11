@@ -1,31 +1,21 @@
+from enum import Enum, auto
 from pprint import pprint
 
 from globals import *
 import pygame
 
 
-class Connection:
+class ZoneType(Enum):
+    RESTRICTED = auto()
+    PRIORITY = auto()
+    BLOCKED = auto()
+    NORMAL = auto()
 
-    def __init__(
-        self,
-        hub_from: str,
-        hub_to: str,
-        start: tuple[int, int],
-        end: tuple[int, int],
-        max_link_capacity: int = 1,
-    ) -> None:
-        self.hub_from: str = hub_from
-        self.hub_to: str = hub_to
-        self.max_link_capacity: int = max_link_capacity
-        self.start_pos: tuple[int, int] = start
-        self.end_pos: tuple[int, int] = end
-        self.drones_passing: int = 0
 
-    def can_drone_pass(self) -> bool:
-        if self.drones_passing < self.max_link_capacity:
-            return True
-
-        return False
+class HubType(Enum):
+    START = auto()
+    END = auto()
+    NORMAL = auto()
 
 
 class Hub:
@@ -35,10 +25,10 @@ class Hub:
         name: str,
         x: int,
         y: int,
-        color: str,  # later make in Color type
+        color: str,
         max_drones: int,
-        hub_type: str,  # later make in HubType type
-        zone_type: str,  # later make in ZoneType type
+        hub_type: HubType,
+        zone_type: ZoneType,
     ) -> None:
 
         self.name: str = name
@@ -46,9 +36,9 @@ class Hub:
         self.y: int = y
         self.color: str = color
         self.max_drones: int = int(max_drones)
+        self.hub_type: HubType = hub_type
+        self.zone_type: ZoneType = zone_type
 
-        self.hub_type: str = hub_type
-        self.zone_type: str = zone_type
         self.surf: None | pygame.surface.Surface = None
         self.text_base: pygame.Font = pygame.font.Font(FONT_FAMILY_PATH, 30)
         self.text_surf: pygame.Surface = self.text_base.render(f"{name}", True, color)
@@ -57,7 +47,7 @@ class Hub:
         self.drones_setting: int = 0
 
     def is_restricted(self) -> bool:
-        if self.zone_type == "restricted":
+        if self.zone_type == ZoneType.RESTRICTED:
             return True
         return False
 
@@ -69,6 +59,31 @@ class Hub:
             return True
         if self.drones_setting < self.max_drones:
             return True
+        return False
+
+
+class Connection:
+
+    def __init__(
+        self,
+        hub_from: Hub,
+        hub_to: Hub,
+        start_coordinates: tuple[int, int],
+        end_coordinates: tuple[int, int],
+        max_link_capacity: int = 1,
+    ) -> None:
+
+        self.hub_from: Hub = hub_from
+        self.hub_to: Hub = hub_to
+        self.max_link_capacity: int = max_link_capacity
+        self.start_coordinates: tuple[int, int] = start_coordinates
+        self.end_coordinates: tuple[int, int] = end_coordinates
+        self.drones_passing: int = 0
+
+    def can_drone_pass(self) -> bool:
+        if self.drones_passing < self.max_link_capacity:
+            return True
+
         return False
 
 
@@ -95,6 +110,9 @@ class MapData:
     def build_obj(self, raw_data: dict) -> None:
         self.drones_number = raw_data["drones_number"]
         for hub in raw_data["hubs"]:
+
+            # fix initializing
+
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
                 hub["x"],
@@ -110,13 +128,18 @@ class MapData:
                 self.end_hub = self.hubs[hub["name"]]
 
         for c in raw_data["connections"]:
+
+            hub_from: Hub = self.hubs[c["hub_from"]]
+            hub_to: Hub = self.hubs[c["hub_to"]]
+            max_link_capacity: int = c["max_link_capacity"]
+
             self.connections.append(
                 Connection(
-                    c["hub_from"],
-                    c["hub_to"],
-                    (self.hubs[c["hub_from"]].x, self.hubs[c["hub_from"]].y),
-                    (self.hubs[c["hub_to"]].x, self.hubs[c["hub_to"]].y),
-                    c["max_link_capacity"],
+                    hub_from,
+                    hub_to,
+                    hub_from.get_coordinates(),
+                    hub_to.get_coordinates(),
+                    max_link_capacity,
                 )
             )
 
