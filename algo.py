@@ -12,12 +12,12 @@ class Simulator:
         self.mapdata: MapData = mapdata
         self.graph: dict[Hub, list[tuple[Hub, int]]] = {}
         self.drones: list[Drone] = []
-        self.paths: list[list[str]] = []
+        self.paths: list[list[Hub]] = []
 
     def init_path(self):
-        # implement dfs
-        stack: list[tuple[list[Hub], int]] = [([self.mapdata.get_start_hub()], 0)]
-        paths = []
+        stack: list[tuple] = [([self.mapdata.get_start_hub()], 0)]
+
+        paths: list[dict] = []
 
         while stack:
 
@@ -40,9 +40,7 @@ class Simulator:
                     stack.append((path + [neighbor], cost + move))
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
-
         self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
-        print("path found", len(self.paths))
 
     def init_graph(self) -> None:
         type_cost = {
@@ -69,7 +67,13 @@ class Simulator:
     def print_log(self, id: int, destination: str):
         print(f"D{id}-{destination}", end=" ", file=sys.stderr)
 
-    def move(self, step: int = 0) -> None:
+    def is_end(self) -> bool:
+        for drone in self.drones:
+            if drone.current_hub.hub_type != HubType.END:
+                return False
+        return True
+
+    def move(self) -> None:
 
         for drone in self.drones:
 
@@ -81,26 +85,27 @@ class Simulator:
 
             current_connction: Connection | None = drone.current_connection
 
-            if current_hub.hub_type == "end_hub":
+            if current_hub.hub_type == HubType.END:
                 continue
 
             for i in range(len(self.paths)):
 
                 try:
-                    hub_idx = self.paths[i].index(drone.current_hub.name)
+                    hub_idx = self.paths[i].index(drone.current_hub)
                 except ValueError:
                     continue
 
                 path_idx = i
-                current_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx]]
-                targert_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1]]
+                current_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx].name]
+                targert_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
 
                 for c in self.mapdata.connections:
-                    if c.hub_from == current_hub.name and c.hub_to == targert_hub.name:
+                    if c.hub_from == current_hub and c.hub_to == targert_hub:
                         current_connction = c
 
                 if targert_hub.can_enter() == False:
                     continue
+
                 if (
                     current_connction is not None
                     and current_connction.can_drone_pass() == False
@@ -136,10 +141,11 @@ class Simulator:
                     current_connction.drones_passing += 1
                     drone.x = (drone.x + targert_hub.x) / 2
                     drone.y = (drone.y + targert_hub.y) / 2
+
                     if current_connction is not None:
                         self.print_log(
                             drone.id,
-                            f"{current_connction.hub_from}-{current_connction.hub_to}",
+                            f"{current_connction.hub_from.name}-{current_connction.hub_to.name}",
                         )
 
                 else:
@@ -152,7 +158,7 @@ class Simulator:
 
     def init_drones(self) -> None:
 
-        coordinates: tuple[int, int] = self.mapdata.get_start_hub().get_coordinates()
+        x, y = self.mapdata.get_start_hub().get_coordinates()
 
         for drone_id in range(self.mapdata.drones_number):
 
@@ -160,6 +166,7 @@ class Simulator:
                 Drone(
                     drone_id + 1,
                     self.mapdata.get_start_hub(),
-                    coordinates,
+                    x,
+                    y,
                 )
             )

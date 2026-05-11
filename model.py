@@ -55,7 +55,7 @@ class Hub:
         return (self.x, self.y)
 
     def can_enter(self) -> bool:
-        if self.hub_type == "end_hub":
+        if self.hub_type == HubType.END:
             return True
         if self.drones_setting < self.max_drones:
             return True
@@ -111,7 +111,26 @@ class MapData:
         self.drones_number = raw_data["drones_number"]
         for hub in raw_data["hubs"]:
 
-            # fix initializing
+            hub_type: HubType = HubType.NORMAL
+            zone_type: ZoneType = ZoneType.NORMAL
+
+            match hub["type"]:
+                case "start_hub":
+                    hub_type = HubType.START
+                case "normal_hub":
+                    hub_type = HubType.NORMAL
+                case "end_hub":
+                    hub_type = HubType.END
+
+            match hub["zone"]:
+                case "restricted":
+                    zone_type = ZoneType.RESTRICTED
+                case "normal":
+                    zone_type = ZoneType.NORMAL
+                case "priority":
+                    zone_type = ZoneType.PRIORITY
+                case "blocked":
+                    zone_type = ZoneType.BLOCKED
 
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
@@ -119,8 +138,8 @@ class MapData:
                 hub["y"],
                 hub["color"],
                 hub["max_drones"],
-                hub["type"],
-                hub["zone"],
+                hub_type,
+                zone_type,
             )
             if hub["type"] == "start_hub":
                 self.start_hub = self.hubs[hub["name"]]
@@ -148,11 +167,11 @@ class MapData:
 
 class Drone:
 
-    def __init__(self, id: int, current_hub: Hub, coordinates: tuple[int, int]) -> None:
+    def __init__(self, id: int, current_hub: Hub, x: float, y: float) -> None:
 
         self.id = id
-        self.x: float = coordinates[0]
-        self.y: float = coordinates[1]
+        self.x: float = x
+        self.y: float = y
         self.current_hub: Hub = current_hub
 
         img = pygame.image.load("assets/drone.png")

@@ -1,4 +1,8 @@
-D1-waypoint1 
-D1-waypoint2 D2-waypoint1 
-D1-goal D2-waypoint2 
-D2-goal 
+Traceback (most recent call last):
+  File "/home/satifi/flyin/main.py", line 66, in <module>
+    mapdata.build_obj(raw_data)
+  File "/home/satifi/flyin/model.py", line 135, in build_obj
+    self.hubs[hub["name"]] = Hub(
+  File "/home/satifi/flyin/model.py", line 44, in __init__
+    self.text_surf: pygame.Surface = self.text_base.render(f"{name}", True, color)
+ValueError: invalid color name

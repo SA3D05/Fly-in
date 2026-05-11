@@ -69,13 +69,16 @@ class Display:
         match self.menu.sections[self.menu.selected_section].text:
             case "Exit":
                 self._dispose()
+
             # "Forward", "Backward"
+
             case "Start":
-                self.step += 1
-                self.sim.move(self.step)
-                self.steps_text = self.text.render(
-                    f"Steps: {self.step}", False, "white"
-                )
+                if not self.sim.is_end():
+                    self.step += 1
+                    self.sim.move()
+                    self.steps_text = self.text.render(
+                        f"Steps: {self.step}", False, "white"
+                    )
 
     def __check_key_events(self):
 
@@ -224,8 +227,8 @@ class Display:
             pygame.draw.line(
                 self.window,
                 CONNECTION_LINE_COLOR,
-                self.__convert_screen_coordinates(*c.start_pos),
-                self.__convert_screen_coordinates(*c.end_pos),
+                self.__convert_screen_coordinates(*c.start_coordinates),
+                self.__convert_screen_coordinates(*c.end_coordinates),
                 CONNECTION_LINE_SIZE,
             )
 

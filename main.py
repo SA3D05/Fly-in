@@ -67,9 +67,8 @@ if __name__ == "__main__":
     sim: Simulator = Simulator(mapdata)
 
     sim.init_graph()
-    sim.init_path(mapdata.get_start_hub().name)
+    sim.init_path()
 
-    # pprint(sim.path)
     # implement the new algo
 
     sim.init_drones()
