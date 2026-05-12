@@ -1,12 +1,13 @@
 from pprint import pprint
 import random
+from time import sleep
 
 import pygame
 import sys
 from algo import Simulator
-from globals import *
 
-from model import Drone, MapData
+from enums import Config
+from models import Drone, MapData
 from interface import *
 
 
@@ -14,6 +15,9 @@ class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
         info = pygame.display.Info()
+        # self.screen_width, self.screen_height = (1920, 1080)
+        # self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
+
         self.screen_width, self.screen_height = (info.current_w, info.current_h)
 
         self.window = pygame.display.set_mode(
@@ -23,16 +27,18 @@ class Display:
         self.drones: list[Drone] = sim.drones
 
         for hub in mapdata.hubs.values():
-            img = pygame.image.load("assets/hub.png").convert_alpha()
+            img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
             img.fill(hub.color, special_flags=pygame.BLEND_RGBA_MIN)
-            hub.surf = pygame.transform.scale(img, (50, 50))
+            hub.surf = pygame.transform.scale(
+                img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
+            )
 
         self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
-
+        self.delta = 0
+        self.run_sim = False
         self.horizontal_margin = 50
         self.vertical_margin = 100
-        self.hub_size = 30
         self.menu = MenuWindow(
             self.screen_width,
             self.screen_height,
@@ -42,7 +48,7 @@ class Display:
         )
 
         self.menu.init_sections(self.screen_width)
-
+        self.delta = 0
         self.sim_window = SimWindow(
             self.screen_width,
             self.screen_height,
@@ -54,15 +60,27 @@ class Display:
             self.vertical_margin,
         )
 
-        self.text = pygame.font.Font(FONT_FAMILY_PATH, MITRIX_TEXT_SIZE)
-        self.map_file_text = self.text.render(map_file_name, False, "white")
-        self.steps_text = self.text.render("Steps: 0", False, "white")
-
-        self.step = 0
+        self.text_base = pygame.font.Font(
+            Config.FONT_PATH.value, Config.INFO_TEXT_SIZE.value
+        )
+        self.map_file_text = self.text_base.render(map_file_name, False, "white")
+        self.current_steps_text = self.text_base.render("Steps: 0", False, "white")
+        self.timer = 0
+        self.time_between = 0.1
+        self.current_step = 0
+        self.max_steps = -1
 
     def _dispose(self):
         pygame.quit()
         sys.exit()
+
+    def __update_steps(self):
+
+        self.current_steps_text = self.text_base.render(
+            f"Steps: {self.current_step}",
+            False,
+            "green" if self.current_step == self.max_steps else "white",
+        )
 
     def __manage_pressed_event(self):
 
@@ -73,12 +91,29 @@ class Display:
             # "Forward", "Backward"
 
             case "Start":
-                if not self.sim.is_end():
-                    self.step += 1
-                    self.sim.move()
-                    self.steps_text = self.text.render(
-                        f"Steps: {self.step}", False, "white"
-                    )
+
+                self.run_sim = not self.run_sim
+
+            case "Forward":
+                if self.max_steps != -1 and self.sim.forward():
+                    self.current_step += 1
+                    self.__update_steps()
+                else:
+                    self.sim.make_step()
+                    self.current_step += 1
+                    self.__update_steps()
+
+                print("For:", self.sim.forward_stack)
+                print("Back:", self.sim.backward_stack)
+                print("+" * 20)
+
+            case "Backward":
+                if self.max_steps != -1 and self.sim.backward():
+                    self.current_step -= 1
+                    self.__update_steps()
+                print("For:", self.sim.forward_stack)
+                print("Back:", self.sim.backward_stack)
+                print("+" * 20)
 
     def __check_key_events(self):
 
@@ -119,7 +154,28 @@ class Display:
     def game_loop(self) -> None:
         while True:
 
-            self.clock.tick(30)
+            self.delta = self.clock.tick(60) / 1000
+            self.timer += self.delta
+
+            for drone in self.sim.drones:
+                if drone.x > drone.target_x:
+                    drone.x -= self.delta * Config.DRONES_SPEED.value
+                if drone.y > drone.target_y:
+                    drone.y -= self.delta * Config.DRONES_SPEED.value
+            if self.run_sim:
+
+                if self.sim.is_end():
+                    self.run_sim = False
+                    if self.max_steps == -1:
+                        self.max_steps = self.current_step
+                        self.__update_steps()
+
+                elif self.timer >= self.time_between:
+
+                    self.sim.make_step()
+                    self.current_step += 1
+                    self.__update_steps()
+                    self.timer = 0
 
             self.__check_key_events()
             self._redraw()
@@ -141,30 +197,14 @@ class Display:
 
     def _draw_mapfile_name(self):
         self.window.blit(
-            self.steps_text,
-            self.steps_text.get_rect(topright=(self.screen_width, 0)),
+            self.current_steps_text,
+            self.current_steps_text.get_rect(topright=(self.screen_width, 0)),
         )
         self.window.blit(
             self.map_file_text,
             self.map_file_text.get_rect(
                 midbottom=(self.screen_width // 2, self.screen_height)
             ),
-        )
-
-    def _draw_debug_lines(self):
-        pygame.draw.line(
-            self.window,
-            CONNECTION_LINE_COLOR,
-            (self.screen_width / 2, 0),
-            (self.screen_width / 2, self.screen_height),
-            CONNECTION_LINE_SIZE,
-        )
-        pygame.draw.line(
-            self.window,
-            CONNECTION_LINE_COLOR,
-            (0, self.screen_height / 2),
-            (self.screen_width, self.screen_height / 2),
-            CONNECTION_LINE_SIZE,
         )
 
     def _draw_interface(self):
@@ -226,10 +266,10 @@ class Display:
         for c in self.mapdata.connections:
             pygame.draw.line(
                 self.window,
-                CONNECTION_LINE_COLOR,
+                Config.CONNECTION_COLOR.value,
                 self.__convert_screen_coordinates(*c.start_coordinates),
                 self.__convert_screen_coordinates(*c.end_coordinates),
-                CONNECTION_LINE_SIZE,
+                Config.CONNECTION_SIZE.value,
             )
 
     def _draw_hubs(self):
@@ -263,7 +303,7 @@ class Display:
             )
 
     def __convert_screen_coordinates(self, x, y, is_text=0):
-        padding_x = self.hub_size * 2  # hub radius
+        padding_x = Config.HUB_SIZE.value * 2  # hub radius
         padding_y = 100  # hub radius
 
         max_x = max(hub.x for hub in self.mapdata.hubs.values())

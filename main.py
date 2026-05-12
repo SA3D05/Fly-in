@@ -2,18 +2,19 @@
 
 import os
 
+from enums import Config
+
 # hide pygame hello message
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 os.environ["SDL_VIDEO_WINDOW_POS"] = "100,100"
 from pprint import pprint
 from display import Display
-from globals import MAP_FILE
 
 
 import pygame
 import sys
 from algo import Simulator
-from model import MapData
+from models import MapData
 from parser import Parser
 from validator import Validator
 from exception_modles import ParsingError, ValidationError
@@ -41,16 +42,15 @@ if __name__ == "__main__":
     pygame.init()
     parser: Parser = Parser()
     validator: Validator = Validator()
-
+    file = Config.MAP_FILE.value
     # print(len(sys.argv))
     if len(sys.argv) > 1:
-        MAP_FILE = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
+        file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
 
     try:
         raw_data: dict = parser.parse(
             # just for qiuck selection
-            #
-            MAP_FILE
+            file
         )
 
         validator.validate(raw_data)
@@ -73,6 +73,6 @@ if __name__ == "__main__":
 
     sim.init_drones()
 
-    display: Display = Display(sim, MAP_FILE, mapdata)
+    display: Display = Display(sim, file, mapdata)
 
     display.game_loop()

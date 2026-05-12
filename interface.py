@@ -1,6 +1,6 @@
 import pygame
 
-from globals import FONT_FAMILY_PATH
+from enums import Config
 
 
 class MenuSection:
@@ -25,7 +25,9 @@ class MenuSection:
         self.color = color
 
         self.text = text
-        self.font = pygame.font.Font(FONT_FAMILY_PATH, int((screen_width * 40) // 1920))
+        self.font = pygame.font.Font(
+            Config.FONT_PATH.value, int((screen_width * 40) // 1920)
+        )
         self.text_surf = self.font.render(
             text,
             True,
@@ -70,7 +72,7 @@ class MenuWindow:
         self.sections: list[MenuSection] = []
 
     def init_sections(self, screen_width: int):
-        sections = ["Start", "Exit"]
+        sections = ["Start", "Backward", "Forward", "Exit"]
 
         for index, name in enumerate(sections):
 

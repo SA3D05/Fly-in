@@ -78,7 +78,7 @@ hub: conv_restricted9 15 -2 [zone=restricted color=darkred max_drones=1]
 
 # === LAYER 5: The Final Gauntlet of Doom ===
 hub: final_merge 16 0 [color=violet max_drones=5]
-hub: final_torture1 17 0 [color=crimson max_drones=2]
+hub: final_torture1 17 0 [color=crimson max_drones=1]
 hub: final_torture2 18 0 [color=crimson max_drones=1]
 hub: final_torture3 19 0 [color=crimson max_drones=1]
 hub: final_torture4 20 0 [color=crimson max_drones=1]

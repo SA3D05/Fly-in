@@ -1,8 +1,6 @@
-from pprint import pprint
-import random
 import sys
 
-from model import Connection, Drone, Hub, HubType, MapData, ZoneType
+from models import Connection, Drone, Hub, HubType, MapData, ZoneType
 
 
 class Simulator:
@@ -13,6 +11,8 @@ class Simulator:
         self.graph: dict[Hub, list[tuple[Hub, int]]] = {}
         self.drones: list[Drone] = []
         self.paths: list[list[Hub]] = []
+        self.backward_stack: list[list[tuple[Drone, tuple[float, float]]]] = []
+        self.forward_stack: list = []
 
     def init_path(self):
         stack: list[tuple] = [([self.mapdata.get_start_hub()], 0)]
@@ -64,7 +64,7 @@ class Simulator:
                 ),
             )
 
-    def print_log(self, id: int, destination: str):
+    def __print_log(self, id: int, destination: str):
         print(f"D{id}-{destination}", end=" ", file=sys.stderr)
 
     def is_end(self) -> bool:
@@ -73,88 +73,151 @@ class Simulator:
                 return False
         return True
 
-    def move(self) -> None:
+    def forward(self) -> bool:
+        if len(self.forward_stack) < 1:
+            return False
+        instractions = self.forward_stack.pop()
+
+        self.backward_stack.append(list())
+
+        for drone, coordinates in instractions:
+            self.__set_backward_state(drone)
+            self.__update_drone_coordinates(drone, *coordinates)
+        return True
+
+    def backward(self) -> bool:
+        if len(self.backward_stack) < 1:
+            return False
+        instractions = self.backward_stack.pop()
+
+        self.forward_stack.append(list())
+
+        for drone, coordinates in instractions:
+            self.__set_forward_state(drone)
+            self.__update_drone_coordinates(drone, *coordinates)
+
+        return True
+
+    def __set_backward_state(self, drone: Drone):
+        self.backward_stack[-1].append((drone, (drone.x, drone.y)))
+
+    def __set_forward_state(self, drone: Drone):
+        self.forward_stack[-1].append((drone, (drone.x, drone.y)))
+
+    def __skip_connection_step(self, drone: Drone):
+
+        drone.in_connection = False
+        drone.current_connection.drones_passing -= 1
+        self.__set_backward_state(drone)
+        self.__update_drone_coordinates(drone, drone.current_hub.x, drone.current_hub.y)
+        self.__print_log(drone.id, drone.current_hub.name)
+
+    def __move_half(self, drone: Drone, target_hub: Hub, current_connction: Connection):
+
+        drone.in_connection = True
+        drone.current_connection = current_connction
+        current_connction.drones_passing += 1
+        self.__update_drone_coordinates(
+            drone, (drone.x + target_hub.x) / 2, (drone.y + target_hub.y) / 2
+        )
+        self.__print_log(
+            drone.id,
+            f"{current_connction.hub_from.name}-{current_connction.hub_to.name}",
+        )
+
+    def __update_drone_coordinates(
+        self, drone: Drone, targte_x: float, target_y: float
+    ):
+        drone.target_x = targte_x
+        drone.target_y = target_y
+        # drone.x
+
+    def __move(
+        self,
+        drone: Drone,
+        target_hub: Hub,
+        current_connction: Connection,
+    ):
+
+        drone.current_hub.drones_setting -= 1
+        target_hub.drones_setting += 1
+
+        drone.current_hub = target_hub
+        drone.current_connection = current_connction
+
+        if target_hub.is_restricted() and drone.in_connection == False:
+            self.__set_backward_state(drone)
+            self.__move_half(drone, target_hub, current_connction)
+
+        else:
+            self.__set_backward_state(drone)
+            self.__update_drone_coordinates(drone, target_hub.x, target_hub.y)
+            self.__print_log(drone.id, target_hub.name)
+
+    def is_drones_sync(self) -> bool:
 
         for drone in self.drones:
+            if drone.x != drone.target_x or drone.y != drone.target_y:
+                return False
+        return True
 
-            path_idx: int = 0
-            hub_idx: int = 0
+    def make_step(self) -> None:
 
-            current_hub: Hub = drone.current_hub
-            targert_hub: Hub = current_hub
+        # if not self.is_drones_sync():
+        #     return
 
-            current_connction: Connection | None = drone.current_connection
+        if self.forward():
+            return
 
-            if current_hub.hub_type == HubType.END:
+        self.backward_stack.append(list())
+
+        for drone in self.drones:
+            if drone.current_hub.hub_type == HubType.END:
                 continue
 
-            for i in range(len(self.paths)):
+            target_hub, current_connction = self.__choose_correct_path(drone)
 
-                try:
-                    hub_idx = self.paths[i].index(drone.current_hub)
-                except ValueError:
-                    continue
-
-                path_idx = i
-                current_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx].name]
-                targert_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
-
-                for c in self.mapdata.connections:
-                    if c.hub_from == current_hub and c.hub_to == targert_hub:
-                        current_connction = c
-
-                if targert_hub.can_enter() == False:
-                    continue
-
-                if (
-                    current_connction is not None
-                    and current_connction.can_drone_pass() == False
-                ):
-                    continue
-                break
-
-            if drone.in_connection == True:
-
-                drone.in_connection = False
-                drone.x = current_hub.x
-                drone.y = current_hub.y
-                if drone.current_connection is not None:
-                    drone.current_connection.drones_passing -= 1
+            if drone.in_connection:
+                self.__skip_connection_step(drone)
                 continue
 
-            if (
-                targert_hub.can_enter()
-                and current_connction is not None
-                and current_connction.can_drone_pass()
-            ):
-
-                current_hub.drones_setting -= 1
-                targert_hub.drones_setting += 1
-
-                drone.current_hub = targert_hub
-                drone.current_connection = current_connction
-
-                if targert_hub.is_restricted() and drone.in_connection == False:
-
-                    drone.in_connection = True
-                    drone.current_connection = current_connction
-                    current_connction.drones_passing += 1
-                    drone.x = (drone.x + targert_hub.x) / 2
-                    drone.y = (drone.y + targert_hub.y) / 2
-
-                    if current_connction is not None:
-                        self.print_log(
-                            drone.id,
-                            f"{current_connction.hub_from.name}-{current_connction.hub_to.name}",
-                        )
-
-                else:
-                    drone.x = targert_hub.x
-                    drone.y = targert_hub.y
-
-                    self.print_log(drone.id, targert_hub.name)
+            if target_hub.can_enter() and current_connction.can_pass():
+                self.__move(drone, target_hub, current_connction)
 
         print("", file=sys.stderr)
+
+    def __choose_correct_path(self, drone: Drone) -> tuple[Hub, Connection]:
+        path_idx: int = 0
+        hub_idx: int = 0
+
+        current_hub: Hub = drone.current_hub
+        targert_hub: Hub = current_hub
+
+        current_connction: Connection = drone.current_connection
+
+        for i in range(len(self.paths)):
+
+            try:
+                hub_idx = self.paths[i].index(drone.current_hub)
+            except ValueError:
+                continue
+
+            path_idx = i
+            targert_hub = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
+
+            for c in self.mapdata.connections:
+                if c.hub_from == current_hub and c.hub_to == targert_hub:
+                    current_connction = c
+
+            if targert_hub.can_enter() == False:
+                continue
+
+            if current_connction.can_pass() == False:
+                continue
+
+            break
+
+        return (targert_hub, current_connction)
 
     def init_drones(self) -> None:
 
@@ -168,5 +231,6 @@ class Simulator:
                     self.mapdata.get_start_hub(),
                     x,
                     y,
+                    self.mapdata.connections[0],
                 )
             )
