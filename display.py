@@ -1,23 +1,19 @@
-from pprint import pprint
 import random
-from time import sleep
-
 import pygame
 import sys
 from algo import Simulator
-
 from enums import Config
+from interface import MenuWindow, SimWindow
 from models import Drone, MapData
-from interface import *
 
 
 class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
-        info = pygame.display.Info()
         # self.screen_width, self.screen_height = (1920, 1080)
         # self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
 
+        info = pygame.display.Info()
         self.screen_width, self.screen_height = (info.current_w, info.current_h)
 
         self.window = pygame.display.set_mode(
@@ -63,14 +59,17 @@ class Display:
         self.text_base = pygame.font.Font(
             Config.FONT_PATH.value, Config.INFO_TEXT_SIZE.value
         )
-        self.map_file_text = self.text_base.render(map_file_name, False, "white")
-        self.current_steps_text = self.text_base.render("Steps: 0", False, "white")
+        self.map_file_text = self.text_base.render(
+            map_file_name, False, Config.PRIME_COLOR.value
+        )
+        self.current_steps_text = self.text_base.render(
+            "Steps: 0", False, Config.PRIME_COLOR.value
+        )
         self.timer = 0
-        self.time_between = 0.1
         self.current_step = 0
         self.max_steps = -1
 
-    def _dispose(self):
+    def __dispose(self):
         pygame.quit()
         sys.exit()
 
@@ -79,52 +78,42 @@ class Display:
         self.current_steps_text = self.text_base.render(
             f"Steps: {self.current_step}",
             False,
-            "green" if self.current_step == self.max_steps else "white",
+            (
+                "green"
+                if self.current_step == self.max_steps
+                else Config.PRIME_COLOR.value
+            ),
         )
 
     def __manage_pressed_event(self):
 
         match self.menu.sections[self.menu.selected_section].text:
             case "Exit":
-                self._dispose()
-
-            # "Forward", "Backward"
+                self.__dispose()
 
             case "Start":
-
-                self.run_sim = not self.run_sim
+                self.run_sim = True
 
             case "Forward":
                 if self.max_steps != -1 and self.sim.forward():
                     self.current_step += 1
                     self.__update_steps()
-                else:
-                    self.sim.make_step()
-                    self.current_step += 1
-                    self.__update_steps()
-
-                print("For:", self.sim.forward_stack)
-                print("Back:", self.sim.backward_stack)
-                print("+" * 20)
 
             case "Backward":
                 if self.max_steps != -1 and self.sim.backward():
                     self.current_step -= 1
                     self.__update_steps()
-                print("For:", self.sim.forward_stack)
-                print("Back:", self.sim.backward_stack)
-                print("+" * 20)
 
     def __check_key_events(self):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self._dispose()
+                self.__dispose()
 
             elif event.type == pygame.KEYDOWN:
                 match event.key:
                     case pygame.K_q:
-                        self._dispose()
+                        self.__dispose()
 
                     case pygame.K_UP:
                         self.menu.move_up()
@@ -157,45 +146,35 @@ class Display:
             self.delta = self.clock.tick(60) / 1000
             self.timer += self.delta
 
-            for drone in self.sim.drones:
-                if drone.x > drone.target_x:
-                    drone.x -= self.delta * Config.DRONES_SPEED.value
-                if drone.y > drone.target_y:
-                    drone.y -= self.delta * Config.DRONES_SPEED.value
-            if self.run_sim:
+            if self.run_sim and self.max_steps == -1:
 
                 if self.sim.is_end():
-                    self.run_sim = False
-                    if self.max_steps == -1:
-                        self.max_steps = self.current_step
-                        self.__update_steps()
+                    self.max_steps = self.current_step
+                    self.__update_steps()
 
-                elif self.timer >= self.time_between:
-
+                elif self.timer >= Config.STEP_TIME.value:
                     self.sim.make_step()
                     self.current_step += 1
-                    self.__update_steps()
                     self.timer = 0
+                    self.__update_steps()
 
             self.__check_key_events()
-            self._redraw()
+            self.__redraw()
 
-    def _redraw(
+    def __redraw(
         self,
     ) -> None:
-        self.window.fill((32, 32, 32))
+        self.window.fill(Config.BACKGROUND_COLOR.value)
 
-        self._draw_connections()
-        self._draw_hubs()
-        self._draw_drones()
-        self._draw_mapfile_name()
-
-        self._draw_interface()
-        # self._draw_debug_lines()
+        self.__draw_connections()
+        self.__draw_hubs()
+        self.__draw_drones()
+        self.__draw_mapfile_name()
+        self.__draw_interface()
 
         pygame.display.update()
 
-    def _draw_mapfile_name(self):
+    def __draw_mapfile_name(self):
         self.window.blit(
             self.current_steps_text,
             self.current_steps_text.get_rect(topright=(self.screen_width, 0)),
@@ -207,12 +186,12 @@ class Display:
             ),
         )
 
-    def _draw_interface(self):
+    def __draw_interface(self):
 
         # menu part
         pygame.draw.rect(
             self.window,
-            "white",
+            Config.BORDERS_COLOR.value,
             self.menu.surf.get_rect(topleft=(self.menu.x_pos, self.menu.y_pos)),
             5,
             10,
@@ -221,7 +200,7 @@ class Display:
         # graph part
         pygame.draw.rect(
             self.window,
-            "white",
+            Config.BORDERS_COLOR.value,
             self.sim_window.rect,
             5,
             10,
@@ -232,7 +211,7 @@ class Display:
 
             pygame.draw.rect(
                 self.window,
-                section.color,
+                Config.PRIME_COLOR.value,
                 section.rect,
                 0 if self.menu.selected_section == section.index else 5,
                 100,
@@ -244,7 +223,7 @@ class Display:
     def __get_random_coordinates(self, coordinates: tuple) -> tuple:
         return tuple(c + random.randint(-1, 1) for c in coordinates)
 
-    def _draw_drones(self):
+    def __draw_drones(self):
         for drone in self.drones:
 
             x, y = self.__convert_screen_coordinates(drone.x, drone.y)
@@ -261,7 +240,7 @@ class Display:
                 ),
             )
 
-    def _draw_connections(self):
+    def __draw_connections(self):
 
         for c in self.mapdata.connections:
             pygame.draw.line(
@@ -272,7 +251,7 @@ class Display:
                 Config.CONNECTION_SIZE.value,
             )
 
-    def _draw_hubs(self):
+    def __draw_hubs(self):
 
         levels = {}
         for hub in self.mapdata.hubs.values():

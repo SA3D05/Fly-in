@@ -9,9 +9,7 @@ class MenuSection:
         screen_width: int,
         coordinates: tuple[int, int],
         size: tuple[int, int],
-        sections_number: int,
         index: int,
-        color: str,
         text: str,
     ):
 
@@ -22,16 +20,17 @@ class MenuSection:
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
         self.rect = self.surf.get_rect(topleft=(self.x_pos, self.y_pos))
 
-        self.color = color
-
         self.text = text
+        self.text_color: str = "black" if index == 0 else Config.PRIME_COLOR.value
+
         self.font = pygame.font.Font(
             Config.FONT_PATH.value, int((screen_width * 40) // 1920)
         )
+
         self.text_surf = self.font.render(
             text,
-            True,
-            "black" if index == 0 else "white",
+            False,
+            self.text_color,
         )
         self.text_rect = self.text_surf.get_rect(
             center=(
@@ -40,8 +39,14 @@ class MenuSection:
             )
         )
 
-    def change_text(self, color: str):
-        self.text_surf = self.font.render(self.text, True, color)
+    def update_color(self):
+        if self.text_color == Config.PRIME_COLOR.value:
+
+            self.text_color = "black"
+        else:
+            self.text_color = Config.PRIME_COLOR.value
+
+        self.text_surf = self.font.render(self.text, False, self.text_color)
 
 
 class MenuWindow:
@@ -93,9 +98,7 @@ class MenuWindow:
                     screen_width,
                     (x_pos, y_pos),
                     (x_size, y_size),
-                    len(sections),
                     index,
-                    "white",
                     name,
                 )
             )
@@ -109,8 +112,8 @@ class MenuWindow:
         else:
             self.selected_section = target_idx
 
-        self.sections[current_idx].change_text("white")
-        self.sections[self.selected_section].change_text("black")
+        self.sections[current_idx].update_color()
+        self.sections[self.selected_section].update_color()
 
     def move_down(self):
         current_idx = self.selected_section
@@ -121,13 +124,13 @@ class MenuWindow:
         else:
             self.selected_section = target_idx
 
-        self.sections[current_idx].change_text("white")
-        self.sections[self.selected_section].change_text("black")
+        self.sections[current_idx].update_color()
+        self.sections[self.selected_section].update_color()
 
     def change_selected_section(self, section_idx: int):
 
-        self.sections[self.selected_section].change_text("white")
-        self.sections[section_idx].change_text("black")
+        self.sections[self.selected_section].update_color()
+        self.sections[section_idx].update_color()
         self.selected_section = section_idx
 
 

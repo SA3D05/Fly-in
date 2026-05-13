@@ -166,12 +166,6 @@ class Drone:
         self.x: float = x
         self.y: float = y
 
-        self.target_x: float = x
-        self.target_y: float = y
-
-        self.reach_target_x = True
-        self.reach_target_y = True
-
         self.current_hub: Hub = current_hub
 
         img = pygame.image.load(Config.DRONE_SPRITE.value)
@@ -185,12 +179,3 @@ class Drone:
 
     def get_coordinates(self) -> tuple[float, float]:
         return (self.x, self.y)
-
-    def __repr__(self) -> str:
-        return f"D{self.id}"
-
-    # fixing possision here
-    # def update_pos(self, delta: float):
-    #     if not self.reach_target_x:
-    #         if self.x < self.target_x:
-    #             self.x += delta * Config.DRONES_SPEED.value

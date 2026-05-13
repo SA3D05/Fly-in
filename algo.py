@@ -128,9 +128,8 @@ class Simulator:
     def __update_drone_coordinates(
         self, drone: Drone, targte_x: float, target_y: float
     ):
-        drone.target_x = targte_x
-        drone.target_y = target_y
-        # drone.x
+        drone.x = targte_x
+        drone.y = target_y
 
     def __move(
         self,
@@ -154,20 +153,10 @@ class Simulator:
             self.__update_drone_coordinates(drone, target_hub.x, target_hub.y)
             self.__print_log(drone.id, target_hub.name)
 
-    def is_drones_sync(self) -> bool:
+    def make_step(self) -> bool:
 
-        for drone in self.drones:
-            if drone.x != drone.target_x or drone.y != drone.target_y:
-                return False
-        return True
-
-    def make_step(self) -> None:
-
-        # if not self.is_drones_sync():
-        #     return
-
-        if self.forward():
-            return
+        if self.is_end():
+            return False
 
         self.backward_stack.append(list())
 
@@ -185,6 +174,7 @@ class Simulator:
                 self.__move(drone, target_hub, current_connction)
 
         print("", file=sys.stderr)
+        return True
 
     def __choose_correct_path(self, drone: Drone) -> tuple[Hub, Connection]:
         path_idx: int = 0
