@@ -1,37 +1,86 @@
+import re
+import sys
+
+
 class Parser:
+    def __get_lines(self, filename: str) -> list[str]:
+        lines: list[str] = []
+        try:
+            with open(filename) as f:
+                for line in f:
+                    lines.append(line)
+            return lines
+        except Exception as e:
+            print(f"Error Open File: {e}")
+            sys.exit()
+
+    def __validate(self, line: str) -> str | None:
+        number = r"(\-|\+){,1}[0-9]+"
+
+        name = r"[^\-\s]+"
+        kv = r"[a-z\_]+\=([a-z]+|[0-9]+)"
+        metadata = rf"(\[{kv}(\s{kv})*\]){{,1}}"
+
+        hub_pattern = rf"\s{name}\s{number}\s{number}\s{metadata}"
+
+        start_hub_pattern = rf"^start_hub:{hub_pattern}"
+        end_hub_pattern = rf"^end_hub:{hub_pattern}"
+        regular_hub_pattern = rf"^hub:{hub_pattern}"
+
+        connection_pattern = rf"^connection:\s{name}\-{name}\s{metadata}"
+        nb_drones_pattern = rf"^nb_drones:\s{number}"
+
+        if re.search(nb_drones_pattern, line):
+            return "nb_drones"
+
+        elif re.search(start_hub_pattern, line):
+            return "start_hub"
+
+        elif re.search(regular_hub_pattern, line):
+            return "hub"
+
+        elif re.search(end_hub_pattern, line):
+            return "end_hub"
+
+        elif re.search(connection_pattern, line):
+            return "connection"
+
+    def __remove_comment(self, line: str):
+
+        result = ""
+        comment_start = line.find("#")
+
+        for i, character in enumerate(line):
+            if i < comment_start:
+                result += character
+        return result
 
     def parse(self, filename: str) -> dict:
 
+        lines = self.__get_lines(filename)
+        line_idx: int = 0
         result: dict = {
             "connections": [],
             "hubs": [],
             "drones_number": 0,
         }
-        lines: list[str] = list()
-        line_idx: int = 0
-        hub_id: int = 0
-        connection_id: int = 0
-
-        try:
-            with open(filename) as f:
-                for line in f:
-                    lines.append(line)
-        except Exception as e:
-            print(f"Error Open File: {e}")
-            exit()
 
         try:
             for line in lines:
                 line_idx += 1
-
                 if line == "\n" or line.startswith("#"):
                     continue
 
+                if "#" in line:
+                    line = self.__remove_comment(line)
+
+                line_type: str | None = self.__validate(line)
+
+                if line_type is None:
+                    raise ValueError("invalide configuration")
+
                 splitted_line: list[str] = line.split(":")
-                line_type: str = splitted_line[0].strip()
                 line_content: str = splitted_line[1].strip()
-                if len(splitted_line) != 2:
-                    raise ValueError(f"Line not valid")
 
                 if line_type == "nb_drones":
                     result["drones_number"] = int(line_content)
@@ -52,22 +101,19 @@ class Parser:
                     result["connections"].append(self.__parse_connection(line_content))
 
                 else:
-                    raise ValueError(f"Unknown type '{line_type}'")
+                    raise ValueError()
             return result
 
         except Exception as e:
-            print(f"Error Parsing: {e} [line: {line_idx}]")
-            exit()
+            print(f"File: {filename}, line {line_idx}")
+            print(f"Parsing error: {e}")
+            sys.exit()
 
     def __parse_hub(self, line_content: str) -> dict:
         fields = line_content.split(" ", 3)
 
-        try:
-            x = int(fields[1])
-            y = int(fields[2])
-        except Exception:
-            raise ValueError("Hub coordinates not valid")
-
+        x = int(fields[1])
+        y = int(fields[2])
         result: dict = {
             "name": fields[0],
             "x": x,
@@ -80,7 +126,7 @@ class Parser:
     def __parse_connection(self, line_content: str) -> dict:
 
         data_list = line_content.split(" ", 1)
-        hubs = data_list[0].split("-")
+        hubs = line_content.split("-")
         result: dict = {
             "hub_from": hubs[0],
             "hub_to": hubs[1],
@@ -99,10 +145,6 @@ class Parser:
             "color": "none",
             "max_drones": 1,
         }
-
-        if metadata.count("[") != 1 or metadata.count("]") != 1:
-            raise ValueError("Metadata not valid")
-
         metadata = metadata.strip("[]")
 
         for data in metadata.split(" "):
@@ -118,9 +160,6 @@ class Parser:
         return result
 
     def __parse_connection_metadata(self, metadata: str) -> dict:
-
-        if metadata.count("[") != 1 or metadata.count("]") != 1:
-            raise ValueError("Metadata not valid")
 
         metadata = metadata.strip("[]")
         data_list = metadata.split(" ")

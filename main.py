@@ -16,8 +16,6 @@ import sys
 from algo import Simulator
 from models import MapData
 from parser import Parser
-from validator import Validator
-from exception_modles import ParsingError, ValidationError
 
 if __name__ == "__main__":
 
@@ -41,27 +39,22 @@ if __name__ == "__main__":
 
     pygame.init()
     parser: Parser = Parser()
-    validator: Validator = Validator()
     file = Config.MAP_FILE.value
     # print(len(sys.argv))
     if len(sys.argv) > 1:
         file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
 
-    try:
-        raw_data: dict = parser.parse(
-            # just for qiuck selection
-            file
-        )
+    raw_data: dict = parser.parse(
+        # just for qiuck selection
+        file
+    )
 
-        validator.validate(raw_data)
-    except ValidationError as e:
+    print()
+    print()
 
-        print("Validation Error:", e)
-        sys.exit()
-    except ParsingError as e:
-        print("Parsing Error:", e)
-        sys.exit()
+    pprint(raw_data)
 
+    sys.exit()
     mapdata: MapData = MapData()
     mapdata.build_obj(raw_data)
     sim: Simulator = Simulator(mapdata)
