@@ -2,11 +2,11 @@
 
 
 nb_drones: 15
-start_hub: start 0 0 [color=blue]
-hub: way 1 0 [color=blue]
+start_hub: start -0 0 [color=blue]
 hub: waypoint2 2 0 [color=blue]
+hub: waypoint1 1 0 [color=blue]
 end_hub: goal 3 0 [color=blue]
 
-connection: start-waypoint1 [max_link_capacity=10]
-connection: waypoint1-waypoint2
+connection: start-waypoint1 [max_link_capacity=0]
+connection: waypoint2-waypoint2
 connection: waypoint2-goal
