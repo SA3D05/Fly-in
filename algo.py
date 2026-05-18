@@ -1,3 +1,4 @@
+from pprint import pprint
 import sys
 
 from models import Connection, Drone, Hub, HubType, MapData, ZoneType
@@ -16,7 +17,6 @@ class Simulator:
 
     def init_path(self):
         stack: list[tuple] = [([self.mapdata.get_start_hub()], 0)]
-
         paths: list[dict] = []
 
         while stack:
@@ -38,6 +38,7 @@ class Simulator:
 
                 if neighbor not in path and cost != -1:
                     stack.append((path + [neighbor], cost + move))
+                print("Paths:", neighbor, cost)
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
         self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
@@ -63,6 +64,7 @@ class Simulator:
                     type_cost[self.mapdata.hubs[c.hub_from.name].zone_type],
                 ),
             )
+        pprint(self.graph)
 
     def __print_log(self, id: int, destination: str):
         print(f"D{id}-{destination}", end=" ", file=sys.stderr)

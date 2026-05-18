@@ -24,6 +24,7 @@ class Display:
 
         for hub in mapdata.hubs.values():
             img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
+            print(hub.color)
             img.fill(hub.color, special_flags=pygame.BLEND_RGBA_MIN)
             hub.surf = pygame.transform.scale(
                 img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)

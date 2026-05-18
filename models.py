@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from enums import Config, HubType, ZoneType
 import pygame
 
@@ -94,42 +96,20 @@ class MapData:
         return self.end_hub
 
     def build_obj(self, raw_data: dict) -> None:
-        self.drones_number = raw_data["drones_number"]
+        self.drones_number = raw_data["nb_drones"]
         for hub in raw_data["hubs"]:
-
-            hub_type: HubType = HubType.NORMAL
-            zone_type: ZoneType = ZoneType.NORMAL
-
-            match hub["type"]:
-                case "start_hub":
-                    hub_type = HubType.START
-                case "normal_hub":
-                    hub_type = HubType.NORMAL
-                case "end_hub":
-                    hub_type = HubType.END
-
-            match hub["zone"]:
-                case "restricted":
-                    zone_type = ZoneType.RESTRICTED
-                case "normal":
-                    zone_type = ZoneType.NORMAL
-                case "priority":
-                    zone_type = ZoneType.PRIORITY
-                case "blocked":
-                    zone_type = ZoneType.BLOCKED
-
             self.hubs[hub["name"]] = Hub(
                 hub["name"],
                 hub["x"],
                 hub["y"],
                 hub["color"],
                 hub["max_drones"],
-                hub_type,
-                zone_type,
+                hub["type"],
+                hub["zone"],
             )
-            if hub["type"] == "start_hub":
+            if hub["type"] == HubType.START:
                 self.start_hub = self.hubs[hub["name"]]
-            elif hub["type"] == "end_hub":
+            elif hub["type"] == HubType.END:
                 self.end_hub = self.hubs[hub["name"]]
 
         for c in raw_data["connections"]:

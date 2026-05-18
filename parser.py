@@ -173,6 +173,9 @@ class Parser:
             "name": name,
             "x": x,
             "y": y,
+            "zone": ZoneType.NORMAL,
+            "color": "none",
+            "max_drones": 1,
         }
 
         if len(fields) == 4:
@@ -235,11 +238,7 @@ class Parser:
         if re.search(r"^\[\w+=\w+( \w+=\w+)*\]$", metadata) is None:
             raise ValueError("invalid metadata.")
 
-        result: dict[str, ZoneType | str | int] = {
-            "zone": ZoneType.NORMAL,
-            "color": "none",
-            "max_drones": 1,
-        }
+        result: dict[str, ZoneType | str | int] = {}
 
         zone = {
             "restricted": ZoneType.RESTRICTED,

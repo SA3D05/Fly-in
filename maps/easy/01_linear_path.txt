@@ -1,12 +1,14 @@
 # Easy Level 1: Simple linear path
 
 
-nb_drones: +189  
-start_hub: stasrt 0 0
+nb_drones: 5  
+start_hub: start 0 0 [color=blue]
 hub: waypoint1 1 0 [color=blue] #askjfd
 hub: waypoint2 2 0 [color=blue]
-end_hub: end 3 0 
+end_hub: end 3 0 [color=blue]
 
 
 connection: waypoint1-waypoint2
-connection: waypoint1-stasrt
+connection: start-waypoint1
+connection: waypoint2-end
+
