@@ -38,23 +38,17 @@ if __name__ == "__main__":
     ]
 
     pygame.init()
-    parser: Parser = Parser()
     file = Config.MAP_FILE.value
     # print(len(sys.argv))
     if len(sys.argv) > 1:
         file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
 
-    raw_data: dict = parser.parse(
-        # just for qiuck selection
-        file
-    )
+    parser: Parser = Parser(file)
+    parser.parse()
 
-    print()
-    print()
-
-    pprint(raw_data)
-
+    pprint(parser.get_raw_data())
     sys.exit()
+
     mapdata: MapData = MapData()
     mapdata.build_obj(raw_data)
     sim: Simulator = Simulator(mapdata)
@@ -62,6 +56,7 @@ if __name__ == "__main__":
     sim.init_graph()
     sim.init_path()
 
+    pprint([p.name for p in sim.paths[0]])
     # implement the new algo
 
     sim.init_drones()

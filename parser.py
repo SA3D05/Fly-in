@@ -1,14 +1,30 @@
+import inspect
+from pprint import pprint
 import re
 import sys
 
-from enums import ZoneType
+from enums import HubType, ZoneType
 
 
 class Parser:
-    def __get_lines(self, filename: str) -> list[str]:
+
+    def __init__(self, filename: str) -> None:
+        self.hubs: list = []
+        self.nb_drones: int = 0
+        self.connections: list = []
+        self.filename = filename
+
+    def get_raw_data(self):
+        return {
+            "nb_drones": self.nb_drones,
+            "hubs": self.hubs,
+            "connections": self.connections,
+        }
+
+    def __get_lines(self) -> list[str]:
         lines: list[str] = []
         try:
-            with open(filename) as f:
+            with open(self.filename) as f:
                 for line in f:
                     lines.append(line)
             return lines
@@ -16,95 +32,69 @@ class Parser:
             print(f"Error Open File: {e}")
             sys.exit()
 
-    def __validate_hubs(self, hubs: list) -> bool:
-        start_count = 0
-        end_count = 0
-        defined_coordinates: list[tuple[int, int]] = []
-        defined_names: list[str] = []
-
-        for hub in hubs:
-            if hub["type"] == "start_hub":
-                start_count += 1
-            elif hub["type"] == "end_hub":
-                end_count += 1
-
-            current_coordinates = (hub["x"], hub["y"])
-            if current_coordinates in defined_coordinates:
-                return False
-            defined_coordinates.append(current_coordinates)
-
-            if hub["name"] in defined_names:
-                return False
-            defined_names.append(hub["name"])
-
-        if start_count != 1 or end_count != 1:
-            return False
-        return True
-
-    def __is_hub_define(self, hubs: list, hub_from: str, hub_to: str):
+    def check_hubs_define(self, connection: dict) -> None:
         hub_from_found = False
         hub_to_found = False
+        hub_from = connection["hub_from"]
+        hub_to = connection["hub_to"]
 
-        for hub in hubs:
+        for hub in self.hubs:
             if hub["name"] == hub_from:
                 hub_from_found = True
             elif hub["name"] == hub_to:
                 hub_to_found = True
-        if hub_from_found and hub_to_found:
-            return True
-        return False
 
-    def __validate_line(self, line: str) -> str | None:
-        number = r"(\-|\+){0,1}[0-9]+"
-        name = r"[^\-\s]+"
-        tag_value = r"[a-z\_]+\=([a-z]+|[0-9]+)"
-        metadata = rf"( \[{tag_value}( {tag_value})*\]){{0,1}}"
+        if not hub_from_found:
+            raise ValueError(f"hub '{hub_from}' are not define.")
 
-        hub_pattern = rf"{name} {number} {number}{metadata}"
-
-        start_hub_pattern = rf"^start_hub: {hub_pattern}"
-        end_hub_pattern = rf"^end_hub: {hub_pattern}"
-        regular_hub_pattern = rf"^hub: {hub_pattern}"
-
-        connection_pattern = rf"^connection: {name}\-{name}{metadata}"
-        nb_drones_pattern = rf"^nb_drones: {number}"
-
-        if re.search(nb_drones_pattern, line):
-            return "nb_drones"
-
-        elif re.search(start_hub_pattern, line):
-            return "start_hub"
-
-        elif re.search(regular_hub_pattern, line):
-            return "hub"
-
-        elif re.search(end_hub_pattern, line):
-            return "end_hub"
-
-        elif re.search(connection_pattern, line):
-            return "connection"
+        if not hub_to_found:
+            raise ValueError(f"hub '{hub_to}' are not define.")
 
     def __remove_comment(self, line: str):
-
         result = ""
         comment_start = line.find("#")
 
         for i, character in enumerate(line):
             if i < comment_start:
                 result += character
+
         return result
 
-    def parse(self, filename: str) -> dict:
+    def __validate_hub(self, new_hub: dict) -> None:
 
-        lines = self.__get_lines(filename)
-        line_idx: int | None = 0
-        pass_first_line = False
-        pass_defined_hubs = False
-        result: dict = {
-            "connections": [],
-            "hubs": [],
-            "drones_number": 0,
-        }
+        for hub in self.hubs:
+
+            if hub["type"] == HubType.START and new_hub["type"] == HubType.START:
+                raise ValueError("the start_hub is alredy defined.")
+
+            if hub["type"] == HubType.END and new_hub["type"] == HubType.END:
+                raise ValueError("the end_hub is alredy defined.")
+
+            if hub["name"] == new_hub["name"]:
+                raise ValueError(f"the hub name '{hub['name']}' is alredy used.")
+
+            if hub["x"] == new_hub["x"] and hub["y"] == new_hub["y"]:
+                raise ValueError(f"the coordinates is alredy used in '{hub['name']}'.")
+
+    def __check_start_end(self) -> None:
+        start_count = 0
+        end_count = 0
+        for hub in self.hubs:
+            if hub["type"] == HubType.START:
+                start_count += 1
+            elif hub["type"] == HubType.END:
+                end_count += 1
+
+        if start_count < 1:
+            raise ValueError("start_hub no provided.")
+
+        if end_count < 1:
+            raise ValueError("end_hub no provided.")
+
+    def parse(self) -> None:
+
+        lines: list[str] = self.__get_lines()
+        line_idx: int = 0
 
         try:
             for line in lines:
@@ -115,108 +105,135 @@ class Parser:
                 if "#" in line:
                     line = self.__remove_comment(line)
 
-                line_type: str | None = self.__validate_line(line)
-
-                if line_type is None:
-                    raise ValueError("invalide configuration")
-
                 splitted_line: list[str] = line.split(":")
+
+                if len(splitted_line) != 2:
+                    raise ValueError(f"invalid configuration.")
+
+                if re.search(r"^.+: .+$", line) is None:
+                    raise ValueError(f"invalid configuration.")
+
+                line_type: str = splitted_line[0]
                 line_content: str = splitted_line[1].strip()
 
                 if line_type == "nb_drones":
-                    if pass_first_line:
-                        raise ValueError("invalide configuration")
-                    pass_first_line = True
-                    try:
-                        result["drones_number"] = int(line_content)
-                    except Exception:
-                        raise ValueError("invalide configuration")
-
-                elif line_type == "start_hub":
-                    if pass_defined_hubs:
-                        raise ValueError("invalide configuration")
-                    pass_first_line = True
-                    result["hubs"].append(self.__parse_hub(line_content))
-                    result["hubs"][-1].update({"type": "start_hub"})
-
-                elif line_type == "end_hub":
-                    if pass_defined_hubs:
-                        raise ValueError("invalide configuration")
-                    pass_first_line = True
-                    result["hubs"].append(self.__parse_hub(line_content))
-                    result["hubs"][-1].update({"type": "end_hub"})
-
-                elif line_type == "hub":
-                    if pass_defined_hubs:
-                        raise ValueError("invalide configuration")
-                    pass_first_line = True
-                    result["hubs"].append(self.__parse_hub(line_content))
-                    result["hubs"][-1].update({"type": "normal_hub"})
+                    self.__parse_nb_drones(line_content)
+                elif "hub" in line_type:
+                    self.__parse_hub(line_content, line_type)
 
                 elif line_type == "connection":
-                    pass_first_line = True
-                    pass_defined_hubs = True
-                    connection = self.__parse_connection(line_content)
+                    self.__parse_connection(line_content)
 
-                    if not self.__is_hub_define(
-                        result["hubs"], connection["hub_from"], connection["hub_to"]
-                    ):
-                        raise ValueError("invalide configuration")
-                    result["connections"].append(connection)
+                else:
+                    raise ValueError(f"unknown type '{line_type}'")
 
-            if not self.__validate_hubs(result["hubs"]):
-                line_idx = None
-                raise ValueError("invalide configuration")
-            return result
+            self.__check_start_end()
 
         except Exception as e:
-
-            print(f"File: {filename}", end="")
+            print(f"File: {self.filename}", end="")
             if line_idx is not None:
                 print(f", line {line_idx}")
             else:
                 print()
 
             print(f"Error: {e}")
-            sys.exit()
+            # print()
+            # pprint(self.__dict__)
+            exit()
 
-    def __parse_hub(self, line_content: str) -> dict:
+    def __parse_nb_drones(self, line_content: str):
+
+        if re.search(r"^(\+|\-){0,1}[0-9]+$", line_content) is None:
+            raise ValueError("invalid configuration.")
+
+        if int(line_content) < 1:
+            raise ValueError(f"drones number must be a positive integer.")
+
+        self.nb_drones = int(line_content)
+
+    def __parse_hub(self, line_content: str, hub_type: str) -> None:
+
         fields = line_content.split(" ", 3)
 
-        x = int(fields[1])
-        y = int(fields[2])
-        result: dict = {
-            "name": fields[0],
+        if len(fields) < 3:
+            raise ValueError(f"configuration are not completed.")
+
+        name = fields[0]
+
+        if "-" in name:
+            raise ValueError(f"names can't contain dashes '{name}'.")
+
+        try:
+            x = int(fields[1])
+            y = int(fields[2])
+        except Exception:
+            raise ValueError("invalid coordinates.")
+
+        new_hub: dict = {
+            "name": name,
             "x": x,
             "y": y,
-            "zone": ZoneType.NORMAL,
-            "color": "none",
-            "max_drones": 1,
         }
 
-        if len(fields) > 3:
-            result.update(self.__parse_hub_metadata(fields[3]))
+        if len(fields) == 4:
+            new_hub.update(self.__parse_hub_metadata(fields[3]))
 
-        return result
+        if hub_type == "start_hub":
+            new_hub.update({"type": HubType.START})
 
-    def __parse_connection(self, line_content: str) -> dict:
+        elif hub_type == "hub":
+            new_hub.update({"type": HubType.NORMAL})
 
-        fields = line_content.split(" ")
-        hubs = fields[0].split("-")
+        elif hub_type == "end_hub":
+            new_hub.update({"type": HubType.END})
 
-        if hubs[0] == hubs[1]:
-            raise ValueError("Metadata not valid")
-        result: dict = {
-            "hub_from": hubs[0],
-            "hub_to": hubs[1],
+        else:
+            raise ValueError("invalid type.")
+
+        self.__validate_hub(new_hub)
+        self.hubs.append(new_hub)
+
+    def __parse_connection(self, line_content: str) -> None:
+
+        data_list = line_content.split(" ", 1)
+
+        if data_list[0].count("-") != 1:
+            raise ValueError("invalid connection configuration.")
+
+        hub_from, hub_to = data_list[0].split("-")
+        if hub_from == hub_to:
+            raise ValueError("hub_from and hub_to can't be the same.")
+        new_connection: dict = {
+            "hub_from": hub_from,
+            "hub_to": hub_to,
             "max_link_capacity": 1,
         }
 
-        if len(fields) > 1:
-            result.update(self.__parse_connection_metadata(fields[1]))
-        return result
+        if len(data_list) > 1:
+            new_connection.update(self.__parse_connection_metadata(data_list[1]))
 
-    def __parse_hub_metadata(self, metadata: str) -> dict[str, ZoneType | str | int]:
+        self.check_hubs_define(new_connection)
+        self.__check_connection_define(new_connection)
+        self.connections.append(new_connection)
+
+    def __check_connection_define(self, new_connection: dict) -> None:
+
+        for connection in self.connections:
+            if (
+                connection["hub_from"] == new_connection["hub_from"]
+                and connection["hub_to"] == new_connection["hub_to"]
+            ):
+                raise ValueError("the connection is alredy define.")
+            if (
+                connection["hub_from"] == new_connection["hub_to"]
+                and connection["hub_to"] == new_connection["hub_from"]
+            ):
+                raise ValueError("the connection is alredy define.")
+
+    def __parse_hub_metadata(self, metadata: str) -> dict:
+
+        if re.search(r"^\[\w+=\w+( \w+=\w+)*\]$", metadata) is None:
+            raise ValueError("invalid metadata.")
 
         result: dict[str, ZoneType | str | int] = {
             "zone": ZoneType.NORMAL,
@@ -230,6 +247,7 @@ class Parser:
             "blocked": ZoneType.BLOCKED,
             "priority": ZoneType.PRIORITY,
         }
+
         metadata = metadata.strip("[]")
 
         processed: list[str] = []
@@ -237,47 +255,64 @@ class Parser:
 
             splitted_data = data.split("=", 2)
 
-            tag = splitted_data[0].lower()
+            key = splitted_data[0].lower()
             value = splitted_data[1].lower()
 
-            if tag in processed:
-                raise ValueError("Metadata not valid")
+            if key in processed:
+                raise ValueError(f"the key '{key}' alredy defined.")
+            processed.append(key)
 
-            processed.append(tag)
             try:
-                if tag == "color":
-                    result[tag] = value
-                elif tag == "zone":
-                    result[tag] = zone[value]
-                elif tag == "max_drones":
-                    n = int(value)
-                    if n < 1:
-                        raise ValueError()
-                    result[tag] = n
+                if key == "color":
+                    if value.isdigit():
+                        raise ValueError(
+                            "'color' value must be a valid single-word strings."
+                        )
+                    result[key] = value
 
-            except Exception:
-                raise ValueError("Metadata not valid")
+                elif key == "zone":
+                    result[key] = zone[value]
+
+                elif key == "max_drones":
+
+                    if not value.isdigit() or int(value) < 1:
+                        raise ValueError(
+                            "'max_drones' value must be a positive integers."
+                        )
+                    result[key] = int(value)
+
+                else:
+                    raise ValueError(f"unknown key '{key}' in metadata.")
+
+            except KeyError:
+                raise ValueError(f"unknown value '{value}' for '{key}'.")
 
         return result
 
-    def __parse_connection_metadata(self, metadata: str) -> dict[str, int]:
+    def __parse_connection_metadata(self, metadata: str) -> dict:
+
+        if metadata.count("[") != 1 or metadata.count("]") != 1:
+            raise ValueError("invalid metadata.")
 
         metadata = metadata.strip("[]")
-        fields = metadata.split(" ")
+        data_list = metadata.split(" ")
 
-        if len(fields) != 1:
-            raise ValueError("Metadata not valid")
+        if len(data_list) != 1:
+            raise ValueError("invalid metadata.")
 
-        splitted_data = fields[0].split("=")
+        splitted_data = data_list[0].split("=")
 
         if len(splitted_data) != 2:
-            raise ValueError("Metadata not valid")
+            raise ValueError("invalid metadata.")
 
-        tag: str = splitted_data[0]
+        key: str = splitted_data[0]
         value: str = splitted_data[1]
 
-        if tag != "max_link_capacity" or value.isdigit() == False:
-            raise ValueError("Metadata not valid")
+        if key != "max_link_capacity":
+            raise ValueError(f"unknown key '{key}' in metadata.")
+
+        if not value.isdigit() or int(value) < 1:
+            raise ValueError("'max_link_capacity' value must be a positive integer.")
 
         return {
             "max_link_capacity": int(value),
