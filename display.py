@@ -19,13 +19,17 @@ class Display:
         self.window = pygame.display.set_mode(
             (self.screen_width, self.screen_height), pygame.FULLSCREEN
         )
+
         self.mapdata = mapdata
         self.drones: list[Drone] = sim.drones
 
         for hub in mapdata.hubs.values():
             img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
-            print(hub.color)
-            img.fill(hub.color, special_flags=pygame.BLEND_RGBA_MIN)
+            img.fill(
+                hub.color if hub.color != "rainbow" else "black",
+                special_flags=pygame.BLEND_RGBA_MIN,
+            )
+            hub.__setattr__("rgb", [100, 100, 100])
             hub.surf = pygame.transform.scale(
                 img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
             )
@@ -66,7 +70,9 @@ class Display:
         self.current_steps_text = self.text_base.render(
             "Steps: 0", False, Config.PRIME_COLOR.value
         )
-        self.timer = 0
+        self.sim_timer = 0
+        self.color_timer = 0
+
         self.current_step = 0
         self.max_steps = -1
 
@@ -141,11 +147,28 @@ class Display:
                     ):
                         self.menu.change_selected_section(section.index)
 
+    def __simulate_rainbow_color(self):
+        rainbow = ["Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"]
+        for hub in self.mapdata.hubs.values():
+
+            if hub.color == "rainbow":
+                img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
+
+                img.fill(
+                    random.choice(rainbow),
+                    special_flags=pygame.BLEND_RGBA_MIN,
+                )
+
+                hub.surf = pygame.transform.scale(
+                    img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
+                )
+
     def game_loop(self) -> None:
         while True:
 
             self.delta = self.clock.tick(60) / 1000
-            self.timer += self.delta
+            self.sim_timer += self.delta
+            self.color_timer += self.delta
 
             if self.run_sim and self.max_steps == -1:
 
@@ -153,11 +176,16 @@ class Display:
                     self.max_steps = self.current_step
                     self.__update_steps()
 
-                elif self.timer >= Config.STEP_TIME.value:
+                elif self.sim_timer >= Config.STEP_TIME.value:
+
                     self.sim.make_step()
                     self.current_step += 1
-                    self.timer = 0
+                    self.sim_timer = 0
                     self.__update_steps()
+
+            if self.color_timer >= 0.1:
+                self.__simulate_rainbow_color()
+                self.color_timer = 0
 
             self.__check_key_events()
             self.__redraw()

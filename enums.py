@@ -15,7 +15,7 @@ class HubType(Enum):
 
 
 class Config(Enum):
-    FONT_PATH = "assets/Tiny5.ttf"
+    FONT_PATH = "assets/font.ttf"
     INFO_TEXT_SIZE = 80
     CONNECTION_COLOR = "white"
     CONNECTION_SIZE = 2

@@ -3,6 +3,8 @@ from pprint import pprint
 import re
 import sys
 
+import pygame
+
 from enums import HubType, ZoneType
 
 
@@ -13,6 +15,13 @@ class Parser:
         self.nb_drones: int = 0
         self.connections: list = []
         self.filename = filename
+
+    def __validate_color(self, color: str) -> bool:
+        try:
+            pygame.Color(color)
+            return True
+        except ValueError:
+            return False
 
     def get_raw_data(self):
         return {
@@ -267,6 +276,8 @@ class Parser:
                         raise ValueError(
                             "'color' value must be a valid single-word strings."
                         )
+                    if value != "rainbow" and not self.__validate_color(value):
+                        raise ValueError("invalid 'color' value.")
                     result[key] = value
 
                 elif key == "zone":

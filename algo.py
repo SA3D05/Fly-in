@@ -38,7 +38,6 @@ class Simulator:
 
                 if neighbor not in path and cost != -1:
                     stack.append((path + [neighbor], cost + move))
-                print("Paths:", neighbor, cost)
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
         self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
@@ -64,10 +63,9 @@ class Simulator:
                     type_cost[self.mapdata.hubs[c.hub_from.name].zone_type],
                 ),
             )
-        pprint(self.graph)
 
     def __print_log(self, id: int, destination: str):
-        print(f"D{id}-{destination}", end=" ", file=sys.stderr)
+        print(f"D{id}-{destination}", end=" ")
 
     def is_end(self) -> bool:
         for drone in self.drones:
@@ -175,7 +173,7 @@ class Simulator:
             if target_hub.can_enter() and current_connction.can_pass():
                 self.__move(drone, target_hub, current_connction)
 
-        print("", file=sys.stderr)
+        print()
         return True
 
     def __choose_correct_path(self, drone: Drone) -> tuple[Hub, Connection]:

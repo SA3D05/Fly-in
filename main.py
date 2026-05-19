@@ -1,16 +1,5 @@
-#!.venv/bin/python3
-
-import os
-
 from enums import Config
-
-# hide pygame hello message
-os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
-os.environ["SDL_VIDEO_WINDOW_POS"] = "100,100"
-from pprint import pprint
 from display import Display
-
-
 import pygame
 import sys
 from algo import Simulator
@@ -51,9 +40,6 @@ if __name__ == "__main__":
 
     sim.init_graph()
     sim.init_path()
-    pprint([p.name for p in sim.paths[0]])
-    # implement the new algo
-
     sim.init_drones()
 
     display: Display = Display(sim, file, mapdata)
