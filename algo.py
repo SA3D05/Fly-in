@@ -1,4 +1,5 @@
-from models import Connection, Drone, Hub, HubType, MapData, ZoneType
+from models import Connection, Drone, Hub, MapData
+from enums import ZoneType, HubType
 
 
 class Simulator:
@@ -6,15 +7,15 @@ class Simulator:
     def __init__(self, mapdata: MapData) -> None:
 
         self.mapdata: MapData = mapdata
-        self.graph: dict[Hub, list[tuple[Hub, int]]] = {}
-        self.drones: list[Drone] = []
-        self.paths: list[list[Hub]] = []
-        self.backward_stack: list = []
-        self.forward_stack: list = []
+        self.graph: dict = dict()
+        self.drones: list = list()
+        self.paths: list = list()
+        self.backward_stack: list = list()
+        self.forward_stack: list = list()
 
-    def init_path(self):
-        stack: list[tuple] = [([self.mapdata.get_start_hub()], 0)]
-        paths: list[dict] = []
+    def init_path(self) -> None:
+        stack: list = [([self.mapdata.get_start_hub()], 0)]
+        paths: list = []
 
         while stack:
 
@@ -49,28 +50,21 @@ class Simulator:
 
         for c in self.mapdata.connections:
             self.graph.setdefault(c.hub_from, []).append(
-                (
-                    c.hub_to,
-                    type_cost[self.mapdata.hubs[c.hub_to.name].zone_type],
-                ),
+                (c.hub_to, type_cost[c.hub_to.zone_type]),
             )
             self.graph.setdefault(c.hub_to, []).append(
-                (
-                    c.hub_from,
-                    type_cost[self.mapdata.hubs[c.hub_from.name].zone_type],
-                ),
+                (c.hub_from, type_cost[c.hub_to.zone_type]),
             )
 
-    def reset(self):
+    def reset(self) -> None:
 
-        self.drones = []
+        self.drones = list()
         self.init_drones()
-        self.backward_stack = []
-        self.forward_stack = []
+        self.backward_stack = list()
+        self.forward_stack = list()
 
-    def __print_log(self, id: int, destination: str):
-        # print(f"D{id}-{destination}", end=" ")
-        pass
+    def __print_log(self, id: int, destination: str) -> None:
+        print(f"D{id}-{destination}", end=" ")
 
     def is_end(self) -> bool:
         for drone in self.drones:
@@ -103,21 +97,27 @@ class Simulator:
 
         return True
 
-    def __set_backward_state(self, drone: Drone):
+    def __set_backward_state(self, drone: Drone) -> None:
         self.backward_stack[-1].append((drone, (drone.x, drone.y)))
 
-    def __set_forward_state(self, drone: Drone):
+    def __set_forward_state(self, drone: Drone) -> None:
         self.forward_stack[-1].append((drone, (drone.x, drone.y)))
 
-    def __skip_connection_step(self, drone: Drone):
+    def __skip_connection_step(self, drone: Drone) -> None:
 
         drone.in_connection = False
         drone.current_connection.drones_passing -= 1
         self.__set_backward_state(drone)
-        self.__update_drone_coordinates(drone, drone.current_hub.x, drone.current_hub.y)
+        self.__update_drone_coordinates(
+            drone,
+            drone.current_hub.x,
+            drone.current_hub.y,
+        )
         self.__print_log(drone.id, drone.current_hub.name)
 
-    def __move_half(self, drone: Drone, target_hub: Hub, current_connction: Connection):
+    def __move_half(
+        self, drone: Drone, target_hub: Hub, current_connction: Connection
+    ) -> None:
 
         drone.in_connection = True
         drone.current_connection = current_connction
@@ -132,7 +132,7 @@ class Simulator:
 
     def __update_drone_coordinates(
         self, drone: Drone, targte_x: float, target_y: float
-    ):
+    ) -> None:
         drone.x = targte_x
         drone.y = target_y
 
@@ -141,7 +141,7 @@ class Simulator:
         drone: Drone,
         target_hub: Hub,
         current_connction: Connection,
-    ):
+    ) -> None:
 
         drone.current_hub.drones_setting -= 1
         target_hub.drones_setting += 1
@@ -149,7 +149,7 @@ class Simulator:
         drone.current_hub = target_hub
         drone.current_connection = current_connction
 
-        if target_hub.is_restricted() and drone.in_connection == False:
+        if target_hub.is_restricted() and not drone.in_connection:
             self.__set_backward_state(drone)
             self.__move_half(drone, target_hub, current_connction)
 
@@ -177,7 +177,7 @@ class Simulator:
 
         print()
 
-    def __choose_correct_path(self, drone: Drone) -> tuple[Hub, Connection]:
+    def __choose_correct_path(self, drone: Drone) -> tuple:
         path_idx: int = 0
         hub_idx: int = 0
 
@@ -200,11 +200,11 @@ class Simulator:
                 if c.hub_from == current_hub and c.hub_to == targert_hub:
                     current_connction = c
 
-            if current_connction.can_pass() == False:
+            if not current_connction.can_pass():
                 if drone.id == 2:
                     print("current_connction.can_pass():", current_connction.can_pass())
                 continue
-            if targert_hub.can_enter() == False:
+            if not targert_hub.can_enter():
                 if drone.id == 2:
                     print(
                         "targert_hub.can_enter():",

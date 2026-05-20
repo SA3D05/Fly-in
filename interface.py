@@ -39,7 +39,7 @@ class MenuSection:
             )
         )
 
-    def update_color(self):
+    def update_color(self) -> None:
         if self.text_color == Config.PRIME_COLOR.value:
 
             self.text_color = "black"
@@ -76,7 +76,7 @@ class MenuWindow:
         self.selected_section = 0
         self.sections: list[MenuSection] = []
 
-    def init_sections(self, screen_width: int):
+    def init_sections(self, screen_width: int) -> None:
         sections = ["Start", "Backward", "Forward", "Restart", "Exit"]
 
         for index, name in enumerate(sections):
@@ -103,7 +103,7 @@ class MenuWindow:
                 )
             )
 
-    def move_up(self):
+    def move_up(self) -> None:
         current_idx = self.selected_section
         target_idx = current_idx - 1
 
@@ -115,7 +115,7 @@ class MenuWindow:
         self.sections[current_idx].update_color()
         self.sections[self.selected_section].update_color()
 
-    def move_down(self):
+    def move_down(self) -> None:
         current_idx = self.selected_section
         target_idx = current_idx + 1
 
@@ -127,7 +127,7 @@ class MenuWindow:
         self.sections[current_idx].update_color()
         self.sections[self.selected_section].update_color()
 
-    def change_selected_section(self, section_idx: int):
+    def change_selected_section(self, section_idx: int) -> None:
 
         self.sections[self.selected_section].update_color()
         self.sections[section_idx].update_color()

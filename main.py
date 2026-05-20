@@ -25,23 +25,25 @@ if __name__ == "__main__":
             "maps/hard/03_ultimate_challenge.txt",
         ],
     ]
+    try:
+        pygame.init()
+        file = Config.MAP_FILE.value
+        if len(sys.argv) > 1:
+            file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
 
-    pygame.init()
-    file = Config.MAP_FILE.value
-    if len(sys.argv) > 1:
-        file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
+        parser: Parser = Parser(file)
+        parser.parse()
 
-    parser: Parser = Parser(file)
-    parser.parse()
+        mapdata: MapData = MapData()
+        mapdata.build_obj(parser.get_raw_data())
+        sim: Simulator = Simulator(mapdata)
 
-    mapdata: MapData = MapData()
-    mapdata.build_obj(parser.get_raw_data())
-    sim: Simulator = Simulator(mapdata)
+        sim.init_graph()
+        sim.init_path()
+        sim.init_drones()
 
-    sim.init_graph()
-    sim.init_path()
-    sim.init_drones()
+        display: Display = Display(sim, file, mapdata)
 
-    display: Display = Display(sim, file, mapdata)
-
-    display.game_loop()
+        display.game_loop()
+    except BaseException:
+        print("\nProgram Exit")

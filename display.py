@@ -64,7 +64,7 @@ class Display:
         self.current_step: int = 0
         self.max_steps: int = -1
 
-    def __set_hubs_surf(self):
+    def __set_hubs_surf(self) -> None:
 
         for hub in self.mapdata.hubs.values():
             img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
@@ -76,11 +76,11 @@ class Display:
                 img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
             )
 
-    def __dispose(self):
+    def __dispose(self) -> None:
         pygame.quit()
         sys.exit()
 
-    def __update_steps(self):
+    def __update_steps(self) -> None:
 
         self.current_steps_text = self.text_base.render(
             f"Steps: {self.current_step}",
@@ -92,7 +92,7 @@ class Display:
             ),
         )
 
-    def __manage_pressed_event(self):
+    def __manage_pressed_event(self) -> None:
 
         match self.menu.sections[self.menu.selected_section].text:
             case "Exit":
@@ -102,24 +102,22 @@ class Display:
                 self.run_sim = True
 
             case "Forward":
-                # if self.max_steps != -1 and self.sim.forward():
-                #     self.current_step += 1
-                #     self.__update_steps()
-                self.sim.make_step()
+                if self.max_steps != -1 and self.sim.forward():
+                    self.current_step += 1
+                    self.__update_steps()
             case "Restart":
-                print("OK")
                 self.run_sim = False
                 self.current_step = 0
                 self.max_steps = -1
-                self.sim.reset()
                 self.__update_steps()
+                self.sim.reset()
 
             case "Backward":
                 if self.max_steps != -1 and self.sim.backward():
                     self.current_step -= 1
                     self.__update_steps()
 
-    def __check_key_events(self):
+    def __check_key_events(self) -> None:
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -155,7 +153,7 @@ class Display:
                     ):
                         self.menu.change_selected_section(section.index)
 
-    def __simulate_rainbow_color(self):
+    def __simulate_rainbow_color(self) -> None:
         rainbow = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]
 
         for hub in self.mapdata.hubs.values():
@@ -212,7 +210,7 @@ class Display:
 
         pygame.display.update()
 
-    def __draw_mapfile_name(self):
+    def __draw_mapfile_name(self) -> None:
         self.window.blit(
             self.current_steps_text,
             self.current_steps_text.get_rect(topright=(self.screen_width, 0)),
@@ -224,7 +222,7 @@ class Display:
             ),
         )
 
-    def __draw_interface(self):
+    def __draw_interface(self) -> None:
 
         # menu part
         pygame.draw.rect(
@@ -261,7 +259,7 @@ class Display:
     def __get_random_coordinates(self, coordinates: tuple) -> tuple:
         return tuple(c + random.randint(-1, 1) for c in coordinates)
 
-    def __draw_drones(self):
+    def __draw_drones(self) -> None:
         for drone in self.sim.drones:
 
             x, y = self.__convert_screen_coordinates(drone.x, drone.y)
@@ -278,7 +276,7 @@ class Display:
                 ),
             )
 
-    def __draw_connections(self):
+    def __draw_connections(self) -> None:
 
         for c in self.mapdata.connections:
             pygame.draw.line(
@@ -289,9 +287,9 @@ class Display:
                 Config.CONNECTION_SIZE.value,
             )
 
-    def __draw_hubs(self):
+    def __draw_hubs(self) -> None:
 
-        levels = {}
+        levels: dict = dict()
         for hub in self.mapdata.hubs.values():
 
             if hub.surf is None:
@@ -304,7 +302,7 @@ class Display:
                 ),
             )
 
-            if levels.get(hub.y) == None:
+            if levels.get(hub.y) is None:
                 levels[hub.y] = False
             else:
                 levels[hub.y] = not levels[hub.y]
@@ -319,9 +317,11 @@ class Display:
                 ),
             )
 
-    def __convert_screen_coordinates(self, x, y, is_text=0):
-        padding_x = Config.HUB_SIZE.value * 2  # hub radius
-        padding_y = 100  # hub radius
+    def __convert_screen_coordinates(
+        self, x: float, y: float, is_text: int = 0
+    ) -> tuple:
+        padding_x = Config.HUB_SIZE.value * 2
+        padding_y = 100
 
         max_x = max(hub.x for hub in self.mapdata.hubs.values())
         min_x = min(hub.x for hub in self.mapdata.hubs.values())
@@ -344,4 +344,5 @@ class Display:
             screen_y += 50
         elif is_text == 2:
             screen_y -= 50
+
         return (int(screen_x), int(screen_y))

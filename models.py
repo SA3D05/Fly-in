@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from enums import Config, HubType, ZoneType
 import pygame
 
@@ -20,7 +18,7 @@ class Hub:
         self.name: str = name
         self.x: int = x
         self.y: int = y
-        self.color: str = color
+        self.color: str = color if color != "none" else "black"
         self.max_drones: int = int(max_drones)
         self.hub_type: HubType = hub_type
         self.zone_type: ZoneType = zone_type

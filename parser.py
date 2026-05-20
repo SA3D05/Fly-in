@@ -1,19 +1,15 @@
-import inspect
-from pprint import pprint
+from enums import HubType, ZoneType
+import pygame
 import re
 import sys
-
-import pygame
-
-from enums import HubType, ZoneType
 
 
 class Parser:
 
     def __init__(self, filename: str) -> None:
-        self.hubs: list = []
+        self.hubs: list = list()
+        self.connections: list = list()
         self.nb_drones: int = 0
-        self.connections: list = []
         self.filename = filename
 
     def __validate_color(self, color: str) -> bool:
@@ -23,15 +19,15 @@ class Parser:
         except ValueError:
             return False
 
-    def get_raw_data(self):
+    def get_raw_data(self) -> dict:
         return {
             "nb_drones": self.nb_drones,
             "hubs": self.hubs,
             "connections": self.connections,
         }
 
-    def __get_lines(self) -> list[str]:
-        lines: list[str] = []
+    def __get_lines(self) -> list:
+        lines: list = []
         try:
             with open(self.filename) as f:
                 for line in f:
@@ -59,8 +55,8 @@ class Parser:
         if not hub_to_found:
             raise ValueError(f"hub '{hub_to}' are not define.")
 
-    def __remove_comment(self, line: str):
-        result = ""
+    def __remove_comment(self, line: str) -> str:
+        result: str = str()
         comment_start = line.find("#")
 
         for i, character in enumerate(line):
@@ -117,10 +113,10 @@ class Parser:
                 splitted_line: list[str] = line.split(":")
 
                 if len(splitted_line) != 2:
-                    raise ValueError(f"invalid configuration.")
+                    raise ValueError("invalid configuration.")
 
                 if re.search(r"^.+: .+$", line) is None:
-                    raise ValueError(f"invalid configuration.")
+                    raise ValueError("invalid configuration.")
 
                 line_type: str = splitted_line[0]
                 line_content: str = splitted_line[1].strip()
@@ -150,13 +146,13 @@ class Parser:
             # pprint(self.__dict__)
             exit()
 
-    def __parse_nb_drones(self, line_content: str):
+    def __parse_nb_drones(self, line_content: str) -> None:
 
         if re.search(r"^(\+|\-){0,1}[0-9]+$", line_content) is None:
             raise ValueError("invalid configuration.")
 
         if int(line_content) < 1:
-            raise ValueError(f"drones number must be a positive integer.")
+            raise ValueError("drones number must be a positive integer.")
 
         self.nb_drones = int(line_content)
 
@@ -165,7 +161,7 @@ class Parser:
         fields = line_content.split(" ", 3)
 
         if len(fields) < 3:
-            raise ValueError(f"configuration are not completed.")
+            raise ValueError("configuration are not completed.")
 
         name = fields[0]
 
@@ -178,7 +174,7 @@ class Parser:
         except Exception:
             raise ValueError("invalid coordinates.")
 
-        new_hub: dict = {
+        new_hub = {
             "name": name,
             "x": x,
             "y": y,
@@ -215,7 +211,7 @@ class Parser:
         hub_from, hub_to = data_list[0].split("-")
         if hub_from == hub_to:
             raise ValueError("hub_from and hub_to can't be the same.")
-        new_connection: dict = {
+        new_connection = {
             "hub_from": hub_from,
             "hub_to": hub_to,
             "max_link_capacity": 1,
