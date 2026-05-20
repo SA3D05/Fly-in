@@ -63,7 +63,7 @@ class MenuWindow:
         self.x_pos, self.y_pos = coordinates
 
         self.horizontal_size: int = int(screen_width * 0.2 - horizontal_margin * 2)
-        self.vertical_size = screen_height - (vertical_margin + 300) * 2
+        self.vertical_size = screen_height - (vertical_margin) * 2
 
         self.horizontal_margin = horizontal_margin
         self.vertical_margin = vertical_margin
@@ -71,13 +71,13 @@ class MenuWindow:
         self.surf = pygame.Surface((self.horizontal_size, self.vertical_size))
 
         self.horizontal_sections_margin = 50
-        self.vertical_sections_margin = 10
+        self.vertical_sections_margin = 50
 
         self.selected_section = 0
         self.sections: list[MenuSection] = []
 
     def init_sections(self, screen_width: int):
-        sections = ["Start", "Backward", "Forward", "Exit"]
+        sections = ["Start", "Backward", "Forward", "Restart", "Exit"]
 
         for index, name in enumerate(sections):
 

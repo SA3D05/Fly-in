@@ -4,7 +4,7 @@ import sys
 from algo import Simulator
 from enums import Config
 from interface import MenuWindow, SimWindow
-from models import Drone, MapData
+from models import MapData
 
 
 class Display:
@@ -21,22 +21,10 @@ class Display:
         )
 
         self.mapdata = mapdata
-        self.drones: list[Drone] = sim.drones
-
-        for hub in mapdata.hubs.values():
-            img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
-            img.fill(
-                hub.color if hub.color != "rainbow" else "black",
-                special_flags=pygame.BLEND_RGBA_MIN,
-            )
-            hub.__setattr__("rgb", [100, 100, 100])
-            hub.surf = pygame.transform.scale(
-                img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
-            )
-
+        self.__set_hubs_surf()
         self.sim: Simulator = sim
         self.clock = pygame.time.Clock()
-        self.delta = 0
+        self.delta: float = 0
         self.run_sim = False
         self.horizontal_margin = 50
         self.vertical_margin = 100
@@ -70,11 +58,23 @@ class Display:
         self.current_steps_text = self.text_base.render(
             "Steps: 0", False, Config.PRIME_COLOR.value
         )
-        self.sim_timer = 0
-        self.color_timer = 0
+        self.sim_timer: float = 0
+        self.color_timer: float = 0
 
-        self.current_step = 0
-        self.max_steps = -1
+        self.current_step: int = 0
+        self.max_steps: int = -1
+
+    def __set_hubs_surf(self):
+
+        for hub in self.mapdata.hubs.values():
+            img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
+            img.fill(
+                hub.color if hub.color != "rainbow" else "white",
+                special_flags=pygame.BLEND_RGBA_MIN,
+            )
+            hub.surf = pygame.transform.scale(
+                img, (Config.HUB_SIZE.value, Config.HUB_SIZE.value)
+            )
 
     def __dispose(self):
         pygame.quit()
@@ -102,9 +102,17 @@ class Display:
                 self.run_sim = True
 
             case "Forward":
-                if self.max_steps != -1 and self.sim.forward():
-                    self.current_step += 1
-                    self.__update_steps()
+                # if self.max_steps != -1 and self.sim.forward():
+                #     self.current_step += 1
+                #     self.__update_steps()
+                self.sim.make_step()
+            case "Restart":
+                print("OK")
+                self.run_sim = False
+                self.current_step = 0
+                self.max_steps = -1
+                self.sim.reset()
+                self.__update_steps()
 
             case "Backward":
                 if self.max_steps != -1 and self.sim.backward():
@@ -148,7 +156,8 @@ class Display:
                         self.menu.change_selected_section(section.index)
 
     def __simulate_rainbow_color(self):
-        rainbow = ["Red", "Orange", "Yellow", "Green", "Blue", "Indigo", "Violet"]
+        rainbow = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]
+
         for hub in self.mapdata.hubs.values():
 
             if hub.color == "rainbow":
@@ -183,7 +192,7 @@ class Display:
                     self.sim_timer = 0
                     self.__update_steps()
 
-            if self.color_timer >= 0.1:
+            if self.color_timer >= Config.CHANGE_COLOR_TIME.value:
                 self.__simulate_rainbow_color()
                 self.color_timer = 0
 
@@ -253,7 +262,7 @@ class Display:
         return tuple(c + random.randint(-1, 1) for c in coordinates)
 
     def __draw_drones(self):
-        for drone in self.drones:
+        for drone in self.sim.drones:
 
             x, y = self.__convert_screen_coordinates(drone.x, drone.y)
 

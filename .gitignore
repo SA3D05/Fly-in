@@ -7,3 +7,4 @@ todo.txt
 maps.tar.gz
 maps
 output.txt
+.mypy_cache

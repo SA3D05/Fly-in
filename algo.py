@@ -1,6 +1,3 @@
-from pprint import pprint
-import sys
-
 from models import Connection, Drone, Hub, HubType, MapData, ZoneType
 
 
@@ -12,7 +9,7 @@ class Simulator:
         self.graph: dict[Hub, list[tuple[Hub, int]]] = {}
         self.drones: list[Drone] = []
         self.paths: list[list[Hub]] = []
-        self.backward_stack: list[list[tuple[Drone, tuple[float, float]]]] = []
+        self.backward_stack: list = []
         self.forward_stack: list = []
 
     def init_path(self):
@@ -64,8 +61,16 @@ class Simulator:
                 ),
             )
 
+    def reset(self):
+
+        self.drones = []
+        self.init_drones()
+        self.backward_stack = []
+        self.forward_stack = []
+
     def __print_log(self, id: int, destination: str):
-        print(f"D{id}-{destination}", end=" ")
+        # print(f"D{id}-{destination}", end=" ")
+        pass
 
     def is_end(self) -> bool:
         for drone in self.drones:
@@ -153,10 +158,7 @@ class Simulator:
             self.__update_drone_coordinates(drone, target_hub.x, target_hub.y)
             self.__print_log(drone.id, target_hub.name)
 
-    def make_step(self) -> bool:
-
-        if self.is_end():
-            return False
+    def make_step(self) -> None:
 
         self.backward_stack.append(list())
 
@@ -174,7 +176,6 @@ class Simulator:
                 self.__move(drone, target_hub, current_connction)
 
         print()
-        return True
 
     def __choose_correct_path(self, drone: Drone) -> tuple[Hub, Connection]:
         path_idx: int = 0
@@ -199,10 +200,17 @@ class Simulator:
                 if c.hub_from == current_hub and c.hub_to == targert_hub:
                     current_connction = c
 
-            if targert_hub.can_enter() == False:
-                continue
-
             if current_connction.can_pass() == False:
+                if drone.id == 2:
+                    print("current_connction.can_pass():", current_connction.can_pass())
+                continue
+            if targert_hub.can_enter() == False:
+                if drone.id == 2:
+                    print(
+                        "targert_hub.can_enter():",
+                        targert_hub.can_enter(),
+                        current_hub.name,
+                    )
                 continue
 
             break

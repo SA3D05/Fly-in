@@ -29,7 +29,9 @@ class Hub:
         self.text_base: pygame.Font = pygame.font.Font(
             Config.FONT_PATH.value, Config.HUB_TEXT_SIZE.value
         )
-        self.text_surf: pygame.Surface = self.text_base.render(f"{name}", True, "white")
+        self.text_surf: pygame.surface.Surface = self.text_base.render(
+            f"{name}", True, "white"
+        )
 
         self.to_end: int = 0
         self.drones_setting: int = 0
