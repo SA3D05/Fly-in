@@ -9,12 +9,17 @@ from models import MapData
 
 class Display:
 
-    def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
-        # self.screen_width, self.screen_height = (2560, 1440)
-        # self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
-
+    def __init__(
+        self,
+        sim: Simulator,
+        map_file_name: str,
+        mapdata: MapData,
+    ) -> None:
         info = pygame.display.Info()
-        self.screen_width, self.screen_height = (info.current_w, info.current_h)
+        self.screen_width, self.screen_height = (
+            info.current_w,
+            info.current_h,
+        )
 
         self.window = pygame.display.set_mode(
             (self.screen_width, self.screen_height), pygame.FULLSCREEN
@@ -102,10 +107,10 @@ class Display:
                 self.run_sim = True
 
             case "Forward":
-
-                if self.max_steps != -1 and self.sim.forward():
-                    self.current_step += 1
-                    self.__update_steps()
+                self.sim.make_step()
+                # if self.max_steps != -1 and self.sim.forward():
+                #     self.current_step += 1
+                #     self.__update_steps()
 
             case "Restart":
                 self.run_sim = False
@@ -156,12 +161,22 @@ class Display:
                         self.menu.change_selected_section(section.index)
 
     def __simulate_rainbow_color(self) -> None:
-        rainbow = ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]
+        rainbow = (
+            "red",
+            "orange",
+            "yellow",
+            "green",
+            "blue",
+            "indigo",
+            "violet",
+        )
 
         for hub in self.mapdata.hubs.values():
 
             if hub.color == "rainbow":
-                img = pygame.image.load(Config.HUB_SPRITE.value).convert_alpha()
+                img = pygame.image.load(
+                    Config.HUB_SPRITE.value,
+                ).convert_alpha()
 
                 img.fill(
                     random.choice(rainbow),
@@ -230,7 +245,9 @@ class Display:
         pygame.draw.rect(
             self.window,
             Config.BORDERS_COLOR.value,
-            self.menu.surf.get_rect(topleft=(self.menu.x_pos, self.menu.y_pos)),
+            self.menu.surf.get_rect(
+                topleft=(self.menu.x_pos, self.menu.y_pos),
+            ),
             5,
             10,
         )
@@ -268,7 +285,11 @@ class Display:
 
             self.window.blit(
                 drone.surf,
-                drone.surf.get_rect(center=self.__get_random_coordinates((x, y))),
+                drone.surf.get_rect(
+                    center=self.__get_random_coordinates(
+                        (x, y),
+                    )
+                ),
             )
 
             self.window.blit(
@@ -336,10 +357,14 @@ class Display:
         draw_w = self.sim_window.rect.width - padding_x * 2
         draw_h = self.sim_window.rect.height - padding_y * 2
 
-        scale_x = draw_w / graph_w if graph_w != 0 else draw_w
+        scale_x = (
+            draw_w / graph_w
+            if graph_w != 0 else draw_w
+            )
         scale_y = draw_h / graph_h if graph_h != 0 else draw_h
 
-        screen_x = self.sim_window.rect.left + padding_x + (x - min_x) * scale_x
+        screen_x = (
+            self.sim_window.rect.left + padding_x + (x - min_x) * scale_x)
         screen_y = self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y
 
         if is_text == 1:

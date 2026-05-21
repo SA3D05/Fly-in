@@ -47,5 +47,5 @@ if __name__ == "__main__":
 
         display.game_loop()
 
-    except BaseException:
+    except ValueError:
         print("\nProgram Exit")

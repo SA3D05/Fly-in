@@ -76,10 +76,14 @@ class Parser:
                 raise ValueError("the end_hub is alredy defined.")
 
             if hub["name"] == new_hub["name"]:
-                raise ValueError(f"the hub name '{hub['name']}' is alredy used.")
+                raise ValueError(
+                    f"the hub name '{hub['name']}' is alredy used.",
+                )
 
             if hub["x"] == new_hub["x"] and hub["y"] == new_hub["y"]:
-                raise ValueError(f"the coordinates is alredy used in '{hub['name']}'.")
+                raise ValueError(
+                    f"the coordinates is alredy used in '{hub['name']}'.",
+                )
 
     def __check_start_end(self) -> None:
         start_count = 0
@@ -218,7 +222,11 @@ class Parser:
         }
 
         if len(data_list) > 1:
-            new_connection.update(self.__parse_connection_metadata(data_list[1]))
+            new_connection.update(
+                self.__parse_connection_metadata(
+                    data_list[1],
+                )
+            )
 
         self.check_hubs_define(new_connection)
         self.__check_connection_define(new_connection)
@@ -270,7 +278,8 @@ class Parser:
                 if key == "color":
                     if value.isdigit():
                         raise ValueError(
-                            "'color' value must be a valid single-word strings."
+                            "'color' value must be a"
+                            "valid single-word strings."
                         )
                     if value != "rainbow" and not self.__validate_color(value):
                         raise ValueError("invalid 'color' value.")
@@ -318,7 +327,9 @@ class Parser:
             raise ValueError(f"unknown key '{key}' in metadata.")
 
         if not value.isdigit() or int(value) < 1:
-            raise ValueError("'max_link_capacity' value must be a positive integer.")
+            raise ValueError(
+                "'max_link_capacity' value must be a positive integer.",
+            )
 
         return {
             "max_link_capacity": int(value),

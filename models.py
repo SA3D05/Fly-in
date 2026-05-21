@@ -30,7 +30,7 @@ class Hub:
         self.text_surf: pygame.surface.Surface = self.text_base.render(
             f"{name}", True, "white"
         )
-
+        self.incoming_drones = 0
         self.__drones_setting: int = 0
 
     def is_end_hub(self) -> bool:
@@ -60,8 +60,10 @@ class Hub:
 
         if self.is_end_hub():
             return True
-
-        if self.__drones_setting < self.max_drones:
+        if (
+            self.__drones_setting < self.max_drones
+            and self.incoming_drones < self.max_drones
+        ):
             return True
 
         return False

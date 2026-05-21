@@ -38,7 +38,8 @@ class Simulator:
                     stack.append((path + [neighbor], cost + move))
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
-        self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
+        self.paths = [path["path"] for path in paths
+                      if path["cost"] == smallest_step]
 
     def init_graph(self) -> None:
         type_cost = {
@@ -113,8 +114,8 @@ class Simulator:
     def __set_forward_state(self, drone: Drone) -> None:
         self.forward_stack[-1].append((drone, (drone.x, drone.y)))
 
-    def __skip_connection_step(self, drone: Drone, target_hub: Hub) -> None:
-
+    def __move_connection_step(self, drone: Drone, target_hub: Hub) -> None:
+        target_hub.incoming_drones -= 1
         drone.current_station.leave_station()
         drone.current_station = target_hub
 
@@ -130,11 +131,17 @@ class Simulator:
         self, drone: Drone, target_hub: Hub, target_connction: Connection
     ) -> None:
 
+        target_hub.incoming_drones += 1
         drone.current_station.leave_station()
         drone.current_station = target_connction
         drone.current_station.enter_station()
 
-        self.__update_drone_coordinates(drone, target_hub.x, target_hub.y, True)
+        self.__update_drone_coordinates(
+            drone,
+            target_hub.x,
+            target_hub.y,
+            True,
+        )
         self.__print_log(
             drone.id,
             f"{target_connction.hub_from.name}-{target_connction.hub_to.name}",
@@ -175,7 +182,11 @@ class Simulator:
             self.__update_drone_coordinates(drone, target_hub.x, target_hub.y)
             self.__print_log(drone.id, target_hub.name)
 
-    def __get_connection(self, current_hub: Hub, target_hub: Hub) -> Connection | None:
+    def __get_connection(
+        self,
+        current_hub: Hub,
+        target_hub: Hub,
+    ) -> Connection | None:
         for c in self.mapdata.connections:
             if c.hub_from is current_hub and c.hub_to is target_hub:
                 return c
@@ -199,18 +210,17 @@ class Simulator:
             if target_station is None:
                 continue
 
-            print(target_station.name)
             if isinstance(drone.current_station, Connection):
-                self.__skip_connection_step(drone, target_station)
+                self.__move_connection_step(drone, target_station)
 
             elif target_station.can_enter():
-
                 target_connection = self.__get_connection(
                     drone.current_station, target_station
                 )
-
-                print(drone.current_station.name, target_station.name)
-                if target_connection is not None and target_connection.can_pass():
+                if (
+                    target_connection is not None
+                    and target_connection.can_pass()
+                ):
                     self.__move(drone, target_station, target_connection)
 
         print()
@@ -228,11 +238,12 @@ class Simulator:
                 continue
 
             path_idx = i
-            targert_station = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
+            targert_station = self.mapdata.hubs[
+                self.paths[path_idx][hub_idx + 1].name
+                ]
 
             if not targert_station.can_enter():
                 continue
-
             return targert_station
 
         return None
@@ -242,4 +253,11 @@ class Simulator:
         x, y = self.mapdata.get_start_hub().get_coordinates()
 
         for drone_id in range(self.mapdata.drones_number):
-            self.drones.append(Drone(drone_id + 1, x, y, self.mapdata.get_start_hub()))
+            self.drones.append(
+                Drone(
+                    drone_id + 1,
+                    x,
+                    y,
+                    self.mapdata.get_start_hub(),
+                )
+            )
