@@ -10,7 +10,7 @@ from models import MapData
 class Display:
 
     def __init__(self, sim: Simulator, map_file_name: str, mapdata: MapData) -> None:
-        # self.screen_width, self.screen_height = (1920, 1080)
+        # self.screen_width, self.screen_height = (2560, 1440)
         # self.window = pygame.display.set_mode((self.screen_width, self.screen_height))
 
         info = pygame.display.Info()
@@ -102,9 +102,11 @@ class Display:
                 self.run_sim = True
 
             case "Forward":
+
                 if self.max_steps != -1 and self.sim.forward():
                     self.current_step += 1
                     self.__update_steps()
+
             case "Restart":
                 self.run_sim = False
                 self.current_step = 0

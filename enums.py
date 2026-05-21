@@ -27,5 +27,5 @@ class Config(Enum):
     BACKGROUND_COLOR = (32, 32, 32)
     PRIME_COLOR = "white"
     MAP_FILE = "maps/challenger/01_the_impossible_dream.txt"
-    STEP_TIME = 0
+    STEP_TIME = 0.2
     CHANGE_COLOR_TIME = 0.3

@@ -25,6 +25,7 @@ if __name__ == "__main__":
             "maps/hard/03_ultimate_challenge.txt",
         ],
     ]
+
     try:
         pygame.init()
         file = Config.MAP_FILE.value
@@ -45,5 +46,6 @@ if __name__ == "__main__":
         display: Display = Display(sim, file, mapdata)
 
         display.game_loop()
+
     except BaseException:
         print("\nProgram Exit")

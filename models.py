@@ -31,8 +31,22 @@ class Hub:
             f"{name}", True, "white"
         )
 
-        self.to_end: int = 0
-        self.drones_setting: int = 0
+        self.__drones_setting: int = 0
+
+    def is_end_hub(self) -> bool:
+        return True if self.hub_type == HubType.END else False
+
+    def is_start_hub(self) -> bool:
+        return True if self.hub_type == HubType.START else False
+
+    def reset(self) -> None:
+        self.__drones_setting = 0
+
+    def enter_station(self) -> None:
+        self.__drones_setting += 1
+
+    def leave_station(self) -> None:
+        self.__drones_setting -= 1
 
     def is_restricted(self) -> bool:
         if self.zone_type == ZoneType.RESTRICTED:
@@ -43,10 +57,13 @@ class Hub:
         return (self.x, self.y)
 
     def can_enter(self) -> bool:
-        if self.hub_type == HubType.END:
+
+        if self.is_end_hub():
             return True
-        if self.drones_setting < self.max_drones:
+
+        if self.__drones_setting < self.max_drones:
             return True
+
         return False
 
 
@@ -66,13 +83,22 @@ class Connection:
         self.max_link_capacity: int = max_link_capacity
         self.start_coordinates: tuple[int, int] = start_coordinates
         self.end_coordinates: tuple[int, int] = end_coordinates
-        self.drones_passing: int = 0
+        self.__drones_passing: int = 0
 
     def can_pass(self) -> bool:
-        if self.drones_passing < self.max_link_capacity:
+        if self.__drones_passing < self.max_link_capacity:
             return True
 
         return False
+
+    def reset(self) -> None:
+        self.__drones_passing = 0
+
+    def enter_station(self) -> None:
+        self.__drones_passing += 1
+
+    def leave_station(self) -> None:
+        self.__drones_passing -= 1
 
 
 class MapData:
@@ -136,17 +162,16 @@ class Drone:
     def __init__(
         self,
         id: int,
-        current_hub: Hub,
         x: float,
         y: float,
-        current_connection: Connection,
+        start: Hub,
     ) -> None:
 
         self.id = id
         self.x: float = x
         self.y: float = y
 
-        self.current_hub: Hub = current_hub
+        self.current_station: Hub | Connection = start
 
         img = pygame.image.load(Config.DRONE_SPRITE.value)
         self.surf = pygame.transform.smoothscale(img, (100, 100))
@@ -154,8 +179,12 @@ class Drone:
         self.text_base = pygame.font.Font(Config.FONT_PATH.value, 50)
         self.text_surf = self.text_base.render(f"{id}", True, "white")
         self.reach_goal: bool = False
-        self.in_connection: bool = False
-        self.current_connection: Connection = current_connection
 
     def get_coordinates(self) -> tuple[float, float]:
         return (self.x, self.y)
+
+    def is_in_connection(self) -> bool:
+        return isinstance(self.current_station, Connection)
+
+    def is_in_hub(self) -> bool:
+        return isinstance(self.current_station, Hub)
