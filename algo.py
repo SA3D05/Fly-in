@@ -54,10 +54,11 @@ class Simulator:
                     stack.append((path + [neighbor], cost + move))
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
-        self.paths = [path["path"] for path in paths if path["cost"] == smallest_step]
+        self.paths = [path["path"] for path in paths
+                      if path["cost"] == smallest_step]
 
     def init_graph(self) -> None:
-        """Build graph with traversal costs.
+        """Build graph (adjacency list) with traversal costs.
 
         The cost is derived from the `ZoneType` of the destination hub.
         """
@@ -295,7 +296,10 @@ class Simulator:
                 target_connection = self.__get_connection(
                     drone.current_station, target_station
                 )
-                if target_connection is not None and target_connection.can_pass():
+                if (
+                    target_connection is not None
+                    and target_connection.can_pass()
+                ):
                     self.__move(drone, target_station, target_connection)
 
         print()
@@ -318,7 +322,9 @@ class Simulator:
                 continue
 
             path_idx = i
-            targert_station = self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
+            targert_station = (
+                self.mapdata.hubs[self.paths[path_idx][hub_idx + 1].name]
+                )
 
             if not targert_station.can_enter():
                 continue

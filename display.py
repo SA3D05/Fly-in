@@ -354,7 +354,8 @@ class Display:
             )
 
     def __draw_hubs(self) -> None:
-        """Draw all hubs and their labels, offsetting labels to avoid overlap."""
+        """Draw all hubs and their labels,
+          offsetting labels to avoid overlap."""
 
         levels: dict = dict()
         for hub in self.mapdata.hubs.values():
@@ -404,8 +405,12 @@ class Display:
         scale_x = draw_w / graph_w if graph_w != 0 else draw_w
         scale_y = draw_h / graph_h if graph_h != 0 else draw_h
 
-        screen_x = self.sim_window.rect.left + padding_x + (x - min_x) * scale_x
-        screen_y = self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y
+        screen_x = (
+            self.sim_window.rect.left + padding_x + (x - min_x) * scale_x
+            )
+        screen_y = (
+            self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y
+            )
 
         if is_text == 1:
             screen_y += 50

@@ -1,0 +1,26 @@
+# Module for (currently commented) global constants and legacy values.
+#
+# This file contains optional global configuration values that are not
+# currently used by the codebase but kept for reference.
+
+# FONT_FAMILY_PATH = "assets/Tiny5.ttf"
+
+# HUB_NAME_SIZE = 50
+
+# DRONE_SIZE = 50
+
+
+# DRONE_IMG = "assets/spaceship.png"
+# MAP_FILE = "maps/challenger/01_the_impossible_dream.txt"
+
+# CONNECTION_LINE_SIZE = 2
+# CONNECTION_LINE_COLOR = "white"
+
+# HUB_GAP_HORIZONTAL = 0
+# HUB_GAP_VERTICAL = 200
+
+# HORIZONTAL_SHIFT = 100
+# VERTICAL_SHIFT = 300
+
+
+# MITRIX_TEXT_SIZE = 70

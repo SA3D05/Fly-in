@@ -76,7 +76,8 @@ class Hub:
         """Return True if the hub is restricted zone.
 
         Returns:
-            True when `zone_type` equals `ZoneType.RESTRICTED`, otherwise False.
+            True when `zone_type` equals
+             `ZoneType.RESTRICTED`, otherwise False.
         """
         if self.zone_type == ZoneType.RESTRICTED:
             return True
@@ -147,7 +148,8 @@ class Connection:
         self.__drones_passing = 0
 
     def enter_station(self) -> None:
-        """Increment the passing drones counter when a drone passing through."""
+        """Increment the passing drones counter
+         when a drone passing through."""
         self.__drones_passing += 1
 
     def leave_station(self) -> None:

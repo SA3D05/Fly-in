@@ -16,6 +16,7 @@ class ZoneType(Enum):
         BLOCKED: Not traversable.
         NORMAL: Default traversal cost.
     """
+
     RESTRICTED = auto()
     PRIORITY = auto()
     BLOCKED = auto()
@@ -30,6 +31,7 @@ class HubType(Enum):
         END: Destination hub for drones.
         NORMAL: Regular intermediate hub.
     """
+
     START = auto()
     END = auto()
     NORMAL = auto()
@@ -41,6 +43,7 @@ class Config(Enum):
     These values are intentionally stored as an Enum to provide a
     single importable location for constants used throughout the code.
     """
+
     FONT_PATH = "assets/font.ttf"
     INFO_TEXT_SIZE = 80
     CONNECTION_COLOR = "white"
@@ -52,6 +55,5 @@ class Config(Enum):
     DRONE_SPRITE = "assets/drone.png"
     BACKGROUND_COLOR = (32, 32, 32)
     PRIME_COLOR = "white"
-    MAP_FILE = "maps/challenger/01_the_impossible_dream.txt"
     STEP_TIME = 0.2
     CHANGE_COLOR_TIME = 0.3

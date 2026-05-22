@@ -5,41 +5,22 @@ If no arguments are provided, the default map from `Config.MAP_FILE`
 is used.
 """
 
-from enums import Config
-from display import Display
 import pygame
 import sys
-from algo import Simulator
+from display import Display
 from models import MapData
+from algo import Simulator
 from parser import Parser
 
 if __name__ == "__main__":
 
-    maps = [
-        [
-            "maps/easy/01_linear_path.txt",
-            "maps/easy/02_simple_fork.txt",
-            "maps/easy/03_basic_capacity.txt",
-        ],
-        [
-            "maps/medium/01_dead_end_trap.txt",
-            "maps/medium/02_circular_loop.txt",
-            "maps/medium/03_priority_puzzle.txt",
-        ],
-        [
-            "maps/hard/01_maze_nightmare.txt",
-            "maps/hard/02_capacity_hell.txt",
-            "maps/hard/03_ultimate_challenge.txt",
-        ],
-    ]
-
     try:
         pygame.init()
-        file = Config.MAP_FILE.value
-        if len(sys.argv) > 1:
-            file = maps[int(sys.argv[1]) - 1][int(sys.argv[2]) - 1]
+        if len(sys.argv) != 2:
+            print("Error: no map file provided.")
+            sys.exit()
 
-        parser: Parser = Parser(file)
+        parser: Parser = Parser(sys.argv[1])
         parser.parse()
 
         mapdata: MapData = MapData()
@@ -50,7 +31,7 @@ if __name__ == "__main__":
         sim.init_path()
         sim.init_drones()
 
-        display: Display = Display(sim, file, mapdata)
+        display: Display = Display(sim, sys.argv[1], mapdata)
 
         display.game_loop()
 

@@ -96,7 +96,10 @@ class Parser:
         """
         for hub in self.hubs:
 
-            if hub["type"] == HubType.START and new_hub["type"] == HubType.START:
+            if (
+                hub["type"] == HubType.START
+                and new_hub["type"] == HubType.START
+            ):
                 raise ValueError("the start_hub is alredy defined.")
 
             if hub["type"] == HubType.END and new_hub["type"] == HubType.END:
@@ -321,7 +324,8 @@ class Parser:
                 if key == "color":
                     if value.isdigit():
                         raise ValueError(
-                            "'color' value must be a" "valid single-word strings."
+                            "'color' value must be a"
+                            "valid single-word strings."
                         )
                     if value != "rainbow" and not self.__validate_color(value):
                         raise ValueError("invalid 'color' value.")
