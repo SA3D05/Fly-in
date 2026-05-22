@@ -365,7 +365,8 @@ class Display:
 
         screen_x = (
             self.sim_window.rect.left + padding_x + (x - min_x) * scale_x)
-        screen_y = self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y
+        screen_y = (
+            self.sim_window.rect.bottom - padding_y - (y - min_y) * scale_y)
 
         if is_text == 1:
             screen_y += 50

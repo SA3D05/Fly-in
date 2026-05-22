@@ -69,7 +69,10 @@ class Parser:
 
         for hub in self.hubs:
 
-            if hub["type"] == HubType.START and new_hub["type"] == HubType.START:
+            if (
+                hub["type"] == HubType.START
+                and new_hub["type"] == HubType.START
+            ):
                 raise ValueError("the start_hub is alredy defined.")
 
             if hub["type"] == HubType.END and new_hub["type"] == HubType.END:

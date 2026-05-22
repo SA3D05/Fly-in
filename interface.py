@@ -21,7 +21,8 @@ class MenuSection:
         self.rect = self.surf.get_rect(topleft=(self.x_pos, self.y_pos))
 
         self.text = text
-        self.text_color: str = "black" if index == 0 else Config.PRIME_COLOR.value
+        self.text_color = (
+            "black" if index == 0 else Config.PRIME_COLOR.value)
 
         self.font = pygame.font.Font(
             Config.FONT_PATH.value, int((screen_width * 40) // 1920)
@@ -62,7 +63,8 @@ class MenuWindow:
 
         self.x_pos, self.y_pos = coordinates
 
-        self.horizontal_size: int = int(screen_width * 0.2 - horizontal_margin * 2)
+        self.horizontal_size = int(
+            screen_width * 0.2 - horizontal_margin * 2)
         self.vertical_size = screen_height - (vertical_margin) * 2
 
         self.horizontal_margin = horizontal_margin
@@ -81,10 +83,12 @@ class MenuWindow:
 
         for index, name in enumerate(sections):
 
-            x_size = self.horizontal_size - (self.horizontal_sections_margin * 2)
+            x_size = (
+                self.horizontal_size - (self.horizontal_sections_margin * 2))
 
             y_size = (
-                self.vertical_size - (self.vertical_sections_margin * 2 * len(sections))
+                self.vertical_size - (
+                    self.vertical_sections_margin * 2 * len(sections))
             ) // len(sections)
 
             x_pos = self.horizontal_margin + self.horizontal_sections_margin
