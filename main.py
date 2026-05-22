@@ -1,26 +1,25 @@
 """Entry point for running the drone simulation.
 
-Usage: `python main.py [difficulty_index map_index]`
+Usage: `python main.py [config_map.txt]`
 If no arguments are provided, the default map from `Config.MAP_FILE`
 is used.
 """
+
 import os
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
-import pygame
-import sys
-from display import Display
-from models import MapData
-from algo import Simulator
-from parser import Parser
 
 if __name__ == "__main__":
-
+    import sys
+    from display import Display
+    from models import MapData
+    from algo import Simulator
+    from parser import Parser
+    import pygame
+    pygame.init()
     try:
-        pygame.init()
         if len(sys.argv) != 2:
             print("Error: no map file provided.")
             sys.exit()
-
         parser: Parser = Parser(sys.argv[1])
         parser.parse()
 

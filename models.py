@@ -1,6 +1,8 @@
 from enums import Config, HubType, ZoneType
 import pygame
 
+pygame.init()
+
 
 class Hub:
     """Represent a hub (station) on the map.
@@ -149,7 +151,7 @@ class Connection:
 
     def enter_station(self) -> None:
         """Increment the passing drones counter
-         when a drone passing through."""
+        when a drone passing through."""
         self.__drones_passing += 1
 
     def leave_station(self) -> None:

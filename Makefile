@@ -1,6 +1,6 @@
 
 run:
-	python3 main.py
+	python3 main.py maps/challenger/01_the_impossible_dream.txt
 
 install:
 	pip install pygame
