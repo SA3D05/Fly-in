@@ -1,7 +1,6 @@
 
-
 run:
-	@python3 main.py a.txt
+	python3 main.py
 
 install:
 	pip install pygame
@@ -12,8 +11,8 @@ debug:
 	python3 -m pdb main.py
 
 clean:
-	@ rm -rf .mypy_cache
-	@ rm -rf __pycache__
+	rm -rf .mypy_cache
+	rm -rf __pycache__
 
 
 lint:

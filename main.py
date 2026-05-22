@@ -4,7 +4,8 @@ Usage: `python main.py [difficulty_index map_index]`
 If no arguments are provided, the default map from `Config.MAP_FILE`
 is used.
 """
-
+import os
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 import pygame
 import sys
 from display import Display

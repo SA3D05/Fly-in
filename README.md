@@ -45,11 +45,11 @@ Implementation notes:
 The visualization is implemented using `pygame` and includes the following elements to improve clarity and user experience:
 
 - Hub sprites and colorization:
-  - Each hub uses a sprite image (`assets/hub.png`) and can be colored via map metadata. A special `rainbow` color mode cycles hub colors periodically for visual interest.
+  - Each hub uses a sprite image (`hub.png`) and can be colored via map metadata. A special `rainbow` color mode cycles hub colors periodically for visual interest.
   - Hub labels are rendered with the hub name and positioned to avoid overlapping by alternating offsets.
 
 - Drone sprites and labeling:
-  - Drones use a sprite (`assets/drone.png`) and the drone id is rendered above the sprite to help track individuals.
+  - Drones use a sprite (`drone.png`) and the drone id is rendered above the sprite to help track individuals.
   - Slight random jitter is applied to the drone render position to make overlapping drones easier to distinguish.
 
 - Connections visualization:
