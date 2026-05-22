@@ -8,11 +8,8 @@ install:
 	pip install mypy
 	pip install flake8
 
-
-
-
 debug:
-	@ echo "Later"
+	python3 -m pdb main.py
 
 clean:
 	@ rm -rf .mypy_cache

@@ -4,7 +4,6 @@ Defines `MenuSection`, `MenuWindow` and `SimWindow` for composing the UI.
 """
 
 import pygame
-
 from enums import Config
 
 

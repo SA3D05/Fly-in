@@ -273,7 +273,6 @@ class Display:
     def __draw_interface(self) -> None:
         """Draw menu, graph bounding box and menu sections."""
 
-        # menu part
         pygame.draw.rect(
             self.window,
             Config.BORDERS_COLOR.value,
@@ -284,7 +283,6 @@ class Display:
             10,
         )
 
-        # graph part
         pygame.draw.rect(
             self.window,
             Config.BORDERS_COLOR.value,
@@ -293,7 +291,6 @@ class Display:
             10,
         )
 
-        # sections part
         for section in self.menu.sections:
 
             pygame.draw.rect(
@@ -375,7 +372,6 @@ class Display:
             else:
                 levels[hub.y] = not levels[hub.y]
 
-            # display hub text
             self.window.blit(
                 hub.text_surf,
                 hub.text_surf.get_rect(
