@@ -1,9 +1,14 @@
 
 
 run:
-	@python3 main.py 
+	@python3 main.py
+
+
 install:
 	pip install pygame
+	pip install mypy
+	pip install flake8
+
 
 
 

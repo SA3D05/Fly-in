@@ -1,9 +1,23 @@
+"""User interface components (menu and simulation window) using pygame.
+
+Defines `MenuSection`, `MenuWindow` and `SimWindow` for composing the UI.
+"""
+
 import pygame
 
 from enums import Config
 
 
 class MenuSection:
+    """Represents a selectable section within the side menu.
+
+    Args:
+        screen_width: Current screen width for font sizing.
+        coordinates: Top-left coordinates of the section (x, y).
+        size: Width and height of the section.
+        index: Index position used for selection ordering.
+        text: Display text for the section.
+    """
     def __init__(
         self,
         screen_width: int,
@@ -41,6 +55,10 @@ class MenuSection:
         )
 
     def update_color(self) -> None:
+        """Toggle the text color between prime color and black.
+
+        Used to indicate the currently selected section.
+        """
         if self.text_color == Config.PRIME_COLOR.value:
 
             self.text_color = "black"
@@ -51,7 +69,10 @@ class MenuSection:
 
 
 class MenuWindow:
+    """Container for the collection of `MenuSection` instances.
 
+    Responsible for creating, selecting and navigating menu sections.
+    """
     def __init__(
         self,
         screen_width: int,
@@ -79,6 +100,7 @@ class MenuWindow:
         self.sections: list[MenuSection] = []
 
     def init_sections(self, screen_width: int) -> None:
+        """Create the default set of menu sections and position them."""
         sections = ["Start", "Backward", "Forward", "Restart", "Exit"]
 
         for index, name in enumerate(sections):
@@ -108,6 +130,7 @@ class MenuWindow:
             )
 
     def move_up(self) -> None:
+        """Move the selection upward in the menu (with wrap-around)."""
         current_idx = self.selected_section
         target_idx = current_idx - 1
 
@@ -120,6 +143,7 @@ class MenuWindow:
         self.sections[self.selected_section].update_color()
 
     def move_down(self) -> None:
+        """Move the selection downward in the menu (with wrap-around)."""
         current_idx = self.selected_section
         target_idx = current_idx + 1
 
@@ -132,14 +156,22 @@ class MenuWindow:
         self.sections[self.selected_section].update_color()
 
     def change_selected_section(self, section_idx: int) -> None:
+        """Change selection to the provided `section_idx`.
 
+        Args:
+            section_idx: Index of the section to select.
+        """
         self.sections[self.selected_section].update_color()
         self.sections[section_idx].update_color()
         self.selected_section = section_idx
 
 
 class SimWindow:
+    """Simple container for the simulation draw area and rect.
 
+    Holds the surface and rectangle used for scaling and positioning
+    the graph drawing area.
+    """
     def __init__(
         self,
         screen_width: int,

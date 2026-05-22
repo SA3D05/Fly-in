@@ -1,3 +1,10 @@
+"""Entry point for running the drone simulation.
+
+Usage: `python main.py [difficulty_index map_index]`
+If no arguments are provided, the default map from `Config.MAP_FILE`
+is used.
+"""
+
 from enums import Config
 from display import Display
 import pygame

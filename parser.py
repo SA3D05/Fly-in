@@ -1,3 +1,9 @@
+"""Parse map configuration files into structured raw data.
+
+The parser understands hub and connection declarations and validates
+their syntax and semantic constraints.
+"""
+
 from enums import HubType, ZoneType
 import pygame
 import re
@@ -5,6 +11,11 @@ import sys
 
 
 class Parser:
+    """Parse a map file and expose the raw structured data.
+
+    Args:
+        filename: Path to the map file to parse.
+    """
 
     def __init__(self, filename: str) -> None:
         self.hubs: list = list()
@@ -13,6 +24,7 @@ class Parser:
         self.filename = filename
 
     def __validate_color(self, color: str) -> bool:
+        """Return True when `color` is a valid pygame color string."""
         try:
             pygame.Color(color)
             return True
@@ -20,6 +32,7 @@ class Parser:
             return False
 
     def get_raw_data(self) -> dict:
+        """Return the parsed raw data as a dictionary."""
         return {
             "nb_drones": self.nb_drones,
             "hubs": self.hubs,
@@ -27,6 +40,10 @@ class Parser:
         }
 
     def __get_lines(self) -> list:
+        """Read the file and return its lines.
+
+        Exits the program when the file cannot be opened.
+        """
         lines: list = []
         try:
             with open(self.filename) as f:
@@ -34,10 +51,15 @@ class Parser:
                     lines.append(line)
             return lines
         except Exception as e:
-            print(f"Error Open File: {e}")
+            print(f"Error: {e}")
             sys.exit()
 
     def check_hubs_define(self, connection: dict) -> None:
+        """Validate that hubs referenced by a connection exist.
+
+        Args:
+            connection: Connection dict with keys `hub_from` and `hub_to`.
+        """
         hub_from_found = False
         hub_to_found = False
         hub_from = connection["hub_from"]
@@ -56,6 +78,7 @@ class Parser:
             raise ValueError(f"hub '{hub_to}' are not define.")
 
     def __remove_comment(self, line: str) -> str:
+        """Strip the trailing comment (starting with '#') from a line."""
         result: str = str()
         comment_start = line.find("#")
 
@@ -66,13 +89,14 @@ class Parser:
         return result
 
     def __validate_hub(self, new_hub: dict) -> None:
+        """Validate a new hub against previously defined hubs.
 
+        Ensures unique names, unique start/end hubs and non-overlapping
+        coordinates.
+        """
         for hub in self.hubs:
 
-            if (
-                hub["type"] == HubType.START
-                and new_hub["type"] == HubType.START
-            ):
+            if hub["type"] == HubType.START and new_hub["type"] == HubType.START:
                 raise ValueError("the start_hub is alredy defined.")
 
             if hub["type"] == HubType.END and new_hub["type"] == HubType.END:
@@ -89,6 +113,7 @@ class Parser:
                 )
 
     def __check_start_end(self) -> None:
+        """Ensure that at least one start and one end hub are defined."""
         start_count = 0
         end_count = 0
         for hub in self.hubs:
@@ -104,6 +129,12 @@ class Parser:
             raise ValueError("end_hub no provided.")
 
     def parse(self) -> None:
+        """Parse the map file and populate `hubs`, `connections` and
+        `nb_drones`.
+
+        Raises:
+            ValueError: On any invalid configuration or semantic error.
+        """
 
         lines: list[str] = self.__get_lines()
         line_idx: int = 0
@@ -149,11 +180,10 @@ class Parser:
                 print()
 
             print(f"Error: {e}")
-            # print()
-            # pprint(self.__dict__)
             exit()
 
     def __parse_nb_drones(self, line_content: str) -> None:
+        """Parse and validate the number of drones entry."""
 
         if re.search(r"^(\+|\-){0,1}[0-9]+$", line_content) is None:
             raise ValueError("invalid configuration.")
@@ -164,6 +194,7 @@ class Parser:
         self.nb_drones = int(line_content)
 
     def __parse_hub(self, line_content: str, hub_type: str) -> None:
+        """Parse a hub definition line into a structured hub dict."""
 
         fields = line_content.split(" ", 3)
 
@@ -209,6 +240,10 @@ class Parser:
         self.hubs.append(new_hub)
 
     def __parse_connection(self, line_content: str) -> None:
+        """Parse a connection line and append a connection dict.
+
+        Validates that hubs exist and the connection is not duplicated.
+        """
 
         data_list = line_content.split(" ", 1)
 
@@ -236,6 +271,7 @@ class Parser:
         self.connections.append(new_connection)
 
     def __check_connection_define(self, new_connection: dict) -> None:
+        """Ensure the new connection is not already defined."""
 
         for connection in self.connections:
             if (
@@ -250,6 +286,10 @@ class Parser:
                 raise ValueError("the connection is alredy define.")
 
     def __parse_hub_metadata(self, metadata: str) -> dict:
+        """Parse metadata for a hub enclosed in square brackets.
+
+        Supported keys: `color`, `zone`, `max_drones`.
+        """
 
         if re.search(r"^\[\w+=\w+( \w+=\w+)*\]$", metadata) is None:
             raise ValueError("invalid metadata.")
@@ -281,8 +321,7 @@ class Parser:
                 if key == "color":
                     if value.isdigit():
                         raise ValueError(
-                            "'color' value must be a"
-                            "valid single-word strings."
+                            "'color' value must be a" "valid single-word strings."
                         )
                     if value != "rainbow" and not self.__validate_color(value):
                         raise ValueError("invalid 'color' value.")
@@ -308,6 +347,10 @@ class Parser:
         return result
 
     def __parse_connection_metadata(self, metadata: str) -> dict:
+        """Parse connection metadata, currently only `max_link_capacity`.
+
+        Returns a dict with the validated `max_link_capacity` integer.
+        """
 
         if metadata.count("[") != 1 or metadata.count("]") != 1:
             raise ValueError("invalid metadata.")
