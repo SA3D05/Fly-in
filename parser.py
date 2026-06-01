@@ -28,7 +28,7 @@ class Parser:
         try:
             pygame.Color(color)
             return True
-        except ValueError:
+        except Exception:
             return False
 
     def get_raw_data(self) -> dict:
@@ -51,7 +51,7 @@ class Parser:
                     lines.append(line)
             return lines
         except Exception as e:
-            print(f"Error: {e}")
+            print(e)
             sys.exit()
 
     def check_hubs_define(self, connection: dict) -> None:
@@ -72,10 +72,10 @@ class Parser:
                 hub_to_found = True
 
         if not hub_from_found:
-            raise ValueError(f"hub '{hub_from}' are not define.")
+            raise ValueError(f"Hub '{hub_from}' are not define.")
 
         if not hub_to_found:
-            raise ValueError(f"hub '{hub_to}' are not define.")
+            raise ValueError(f"Hub '{hub_to}' are not define.")
 
     def __remove_comment(self, line: str) -> str:
         """Strip the trailing comment (starting with '#') from a line."""
@@ -100,19 +100,19 @@ class Parser:
                 hub["type"] == HubType.START
                 and new_hub["type"] == HubType.START
             ):
-                raise ValueError("the start_hub is alredy defined.")
+                raise ValueError("The start_hub is alredy defined.")
 
             if hub["type"] == HubType.END and new_hub["type"] == HubType.END:
-                raise ValueError("the end_hub is alredy defined.")
+                raise ValueError("The end_hub is alredy defined.")
 
             if hub["name"] == new_hub["name"]:
                 raise ValueError(
-                    f"the hub name '{hub['name']}' is alredy used.",
+                    f"The hub name '{hub['name']}' is alredy used.",
                 )
 
             if hub["x"] == new_hub["x"] and hub["y"] == new_hub["y"]:
                 raise ValueError(
-                    f"the coordinates is alredy used in '{hub['name']}'.",
+                    f"The coordinates is alredy used in '{hub['name']}'.",
                 )
 
     def __check_start_end(self) -> None:
@@ -154,10 +154,10 @@ class Parser:
                 splitted_line: list[str] = line.split(":")
 
                 if len(splitted_line) != 2:
-                    raise ValueError("invalid configuration.")
+                    raise ValueError("Invalid configuration.")
 
                 if re.search(r"^.+: .+$", line) is None:
-                    raise ValueError("invalid configuration.")
+                    raise ValueError("Invalid configuration.")
 
                 line_type: str = splitted_line[0]
                 line_content: str = splitted_line[1].strip()
@@ -165,16 +165,19 @@ class Parser:
                 if line_type == "nb_drones":
                     self.__parse_nb_drones(line_content)
                 elif "hub" in line_type:
+                    if self.nb_drones == 0:
+                        raise ValueError("nb_drones must be on top.")
                     self.__parse_hub(line_content, line_type)
 
                 elif line_type == "connection":
                     self.__parse_connection(line_content)
 
                 else:
-                    raise ValueError(f"unknown type '{line_type}'")
+                    raise ValueError(f"Unknown type '{line_type}'")
 
             self.__check_start_end()
-
+            if len(self.connections) == 0:
+                raise ValueError("No connections provided.")
         except Exception as e:
             print(f"File: {self.filename}", end="")
             if line_idx is not None:
@@ -182,17 +185,17 @@ class Parser:
             else:
                 print()
 
-            print(f"Error: {e}")
+            print(f"[Error]: {e}")
             exit()
 
     def __parse_nb_drones(self, line_content: str) -> None:
         """Parse and validate the number of drones entry."""
 
         if re.search(r"^(\+|\-){0,1}[0-9]+$", line_content) is None:
-            raise ValueError("invalid configuration.")
+            raise ValueError("Invalid configuration.")
 
         if int(line_content) < 1:
-            raise ValueError("drones number must be a positive integer.")
+            raise ValueError("Drones number must be a positive integer.")
 
         self.nb_drones = int(line_content)
 
@@ -202,18 +205,18 @@ class Parser:
         fields = line_content.split(" ", 3)
 
         if len(fields) < 3:
-            raise ValueError("configuration are not completed.")
+            raise ValueError("Configuration are not completed.")
 
         name = fields[0]
 
         if "-" in name:
-            raise ValueError(f"names can't contain dashes '{name}'.")
+            raise ValueError(f"Names can't contain dashes '{name}'.")
 
         try:
             x = int(fields[1])
             y = int(fields[2])
         except Exception:
-            raise ValueError("invalid coordinates.")
+            raise ValueError("Invalid coordinates.")
 
         new_hub = {
             "name": name,
@@ -237,7 +240,7 @@ class Parser:
             new_hub.update({"type": HubType.END})
 
         else:
-            raise ValueError("invalid type.")
+            raise ValueError(f"Unknown type '{hub_type}'.")
 
         self.__validate_hub(new_hub)
         self.hubs.append(new_hub)
@@ -251,7 +254,7 @@ class Parser:
         data_list = line_content.split(" ", 1)
 
         if data_list[0].count("-") != 1:
-            raise ValueError("invalid connection configuration.")
+            raise ValueError("Invalid connection configuration.")
 
         hub_from, hub_to = data_list[0].split("-")
         if hub_from == hub_to:
@@ -281,12 +284,12 @@ class Parser:
                 connection["hub_from"] == new_connection["hub_from"]
                 and connection["hub_to"] == new_connection["hub_to"]
             ):
-                raise ValueError("the connection is alredy define.")
+                raise ValueError("The connection is alredy define.")
             if (
                 connection["hub_from"] == new_connection["hub_to"]
                 and connection["hub_to"] == new_connection["hub_from"]
             ):
-                raise ValueError("the connection is alredy define.")
+                raise ValueError("The connection is alredy define.")
 
     def __parse_hub_metadata(self, metadata: str) -> dict:
         """Parse metadata for a hub enclosed in square brackets.
@@ -295,7 +298,7 @@ class Parser:
         """
 
         if re.search(r"^\[\w+=\w+( \w+=\w+)*\]$", metadata) is None:
-            raise ValueError("invalid metadata.")
+            raise ValueError("Invalid metadata.")
 
         result: dict[str, ZoneType | str | int] = {}
 
@@ -317,7 +320,7 @@ class Parser:
             value = splitted_data[1].lower()
 
             if key in processed:
-                raise ValueError(f"the key '{key}' alredy defined.")
+                raise ValueError(f"The key '{key}' alredy defined.")
             processed.append(key)
 
             try:
@@ -328,7 +331,7 @@ class Parser:
                             "valid single-word strings."
                         )
                     if value != "rainbow" and not self.__validate_color(value):
-                        raise ValueError("invalid 'color' value.")
+                        raise ValueError("Invalid 'color' value.")
                     result[key] = value
 
                 elif key == "zone":
@@ -343,10 +346,10 @@ class Parser:
                     result[key] = int(value)
 
                 else:
-                    raise ValueError(f"unknown key '{key}' in metadata.")
+                    raise ValueError(f"Unknown key '{key}' in metadata.")
 
             except KeyError:
-                raise ValueError(f"unknown value '{value}' for '{key}'.")
+                raise ValueError(f"Unknown value '{value}' for '{key}'.")
 
         return result
 
@@ -357,24 +360,24 @@ class Parser:
         """
 
         if metadata.count("[") != 1 or metadata.count("]") != 1:
-            raise ValueError("invalid metadata.")
+            raise ValueError("Invalid metadata.")
 
         metadata = metadata.strip("[]")
         data_list = metadata.split(" ")
 
         if len(data_list) != 1:
-            raise ValueError("invalid metadata.")
+            raise ValueError("Invalid metadata.")
 
         splitted_data = data_list[0].split("=")
 
         if len(splitted_data) != 2:
-            raise ValueError("invalid metadata.")
+            raise ValueError("Invalid metadata.")
 
         key: str = splitted_data[0]
         value: str = splitted_data[1]
 
         if key != "max_link_capacity":
-            raise ValueError(f"unknown key '{key}' in metadata.")
+            raise ValueError(f"Unknown key '{key}' in metadata.")
 
         if not value.isdigit() or int(value) < 1:
             raise ValueError(

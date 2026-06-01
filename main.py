@@ -17,8 +17,11 @@ if __name__ == "__main__":
     import pygame
     pygame.init()
     try:
-        if len(sys.argv) != 2:
+        if len(sys.argv) < 2:
             print("Error: no map file provided.")
+            sys.exit()
+        elif len(sys.argv) > 2:
+            print("Error: too many arguments.")
             sys.exit()
         parser: Parser = Parser(sys.argv[1])
         parser.parse()
@@ -28,7 +31,11 @@ if __name__ == "__main__":
         sim: Simulator = Simulator(mapdata)
 
         sim.init_graph()
-        sim.init_path()
+        try:
+            sim.init_path()
+        except Exception as e:
+            print(f"[Error]: {e}")
+            sys.exit()
         sim.init_drones()
 
         display: Display = Display(sim, sys.argv[1], mapdata)

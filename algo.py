@@ -47,11 +47,13 @@ class Simulator:
                     }
                 )
                 continue
-
             for neighbor, cost in self.graph[current_hub]:
 
                 if neighbor not in path and cost != -1:
                     stack.append((path + [neighbor], cost + move))
+
+        if len(paths) == 0:
+            raise ValueError("No path found from start to end.")
 
         smallest_step = min(paths, key=lambda x: x["cost"])["cost"]
         self.paths = [path["path"] for path in paths

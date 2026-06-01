@@ -70,12 +70,53 @@ Requirements:
 - Python 3.10+
 - pygame
 
-Quick setup and run (example):
-
+Quick setup:
 ```bash
 make install
+```
+run (example):
+
+```bash
 python main.py map_config.txt
 ```
+
+## Input
+
+Example `map_config.txt`:
+
+```text
+nb_drones: 2
+
+start_hub: start 0 0 [color=green]
+end_hub: goal 2 0 [color=red]
+
+connection: start-goal [max_link_capacity=2]
+
+```
+## Output
+
+The simulation outputs the drones positions at each move.
+
+### Text Output Example
+
+```text
+D1-roof1 D2-corridorA
+D1-roof2 D2-tunnelB
+D1-goal D2-goal
+```
+
+Where:
+
+* `D1` and `D2` are drone identifiers
+* The text after `-` is the hub occupied by the drone
+* Each line represents a simulation step
+
+
+### Visual Representation (Pygame)
+
+In addition to text output, the simulation is displayed visually in a graph-based view using Pygame.
+
+
 # Resources
 
 Relevant references and documentation:
