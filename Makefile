@@ -1,6 +1,7 @@
-
+MAP_FILE = "maps/basic_capacity.txt"
 run:
-	python3 main.py
+	python3 main.py $(MAP_FILE)
+
 
 install:
 	pip install pygame

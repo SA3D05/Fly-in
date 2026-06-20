@@ -1,136 +1,89 @@
-*This project has been created as part of the 42 curriculum by satifi.*
+# SkyGraph
 
-# Description
+A Python + Pygame project that simulates and visualizes multiple drones
+traveling across a network of hubs and bidirectional connections. The
+simulator reads simple map configuration files, enforces hub/connection
+capacities and zone rules, computes minimal-cost routes and animates the
+movement of drones from a start hub to an end hub.
 
-Fly-in is a simulation and visualization project that models multiple drones moving across a graph of hubs connected by links. The goal is to route a configurable number of drones from a designated start hub to a designated end hub while respecting hub capacities, link capacities, and zone-based traversal rules.
+## Goal
 
-The program parses map file, computes best routes, and animates the drones using pygame to help visualize routing decisions and capacity constraints.
+The goal of this project is to provide a compact, educational tool to:
+- Demonstrate routing and capacity constraints in a graph-like network.
+- Visualize how simple rules (zones, capacities, priorities) affect paths.
+- Provide an interactive playground for experimenting with different map
+	configurations and drone counts.
 
+## What it solves
 
-# Features
+SkyGraph helps explore how constrained resources (hub capacity and link
+capacity) and zone costs influence path selection and throughput. It's
+useful for learning algorithms, visual debugging of routing logic, or
+demonstrating scheduling and congestion effects in a networked environment.
 
-- Parser for human-readable map files describing hubs, connections and metadata (colors, zones, capacities).
-- Path selection preferring minimal cost routes (costs depend on `ZoneType`).
-- Step-by-step simulation with replay support (backward/forward stacks).
-- Pygame-based visualization with hub sprites, drone sprites, animated color modes and a side menu for simple controls.
-
-# Algorithm choices and implementation strategy
-
-Overview:
-- Graph representation: The map is loaded into a `MapData` container (hubs + connections). `Simulator` builds an adjacency list where edges are assigned traversal costs depending on the destination hub's `ZoneType`.
-
-Path computation:
-- Current approach (implemented in `Simulator.init_path()`): enumerate all simple paths from the `start` hub to the `end` hub using a DFS-like search, compute the total cost for each path (sum of destination node costs), and retain all paths that have the minimum total cost.
-
-- Zone cost mapping (used in `Simulator.init_graph()`):
-  - `ZoneType.NORMAL` → cost 1
-  - `ZoneType.PRIORITY` → cost 0
-  - `ZoneType.RESTRICTED` → cost 2
-  - `ZoneType.BLOCKED` → cost -1 (treated as non-traversable)
-
-- Rationale: enumerating all minimal-cost paths preserves multiple equally-good routes and is simple to reason about for the project scope.
-
-Simulation strategy:
-- Drones are instantiated at the start hub and moved synchronously in discrete steps via `Simulator.make_step()`.
-- For each drone, `__choose_correct_path()` finds the next hub on one of the retained minimal paths; movement checks hub capacities (`Hub.can_enter()`) and link capacities (`Connection.can_pass()`).
-- Restricted hubs: drones perform a half-move and occupy the connection before fully entering restricted hubs. End hubs always accept drones.
-- Undo/redo: each step records drone coordinates into `backward_stack` and `forward_stack` to support stepping backward and forward in the simulation.
-
-Implementation notes:
-- The project models hubs and connections as objects (`Hub`, `Connection`) with counters used to enforce capacity rules.
-- The adjacency list is created from `MapData.connections` and references `Hub` instances directly.
-
-# Visual representation features and UX
-
-The visualization is implemented using `pygame` and includes the following elements to improve clarity and user experience:
-
-- Hub sprites and colorization:
-  - Each hub uses a sprite image (`hub.png`) and can be colored via map metadata. A special `rainbow` color mode cycles hub colors periodically for visual interest.
-  - Hub labels are rendered with the hub name and positioned to avoid overlapping by alternating offsets.
-
-- Drone sprites and labeling:
-  - Drones use a sprite (`drone.png`) and the drone id is rendered above the sprite to help track individuals.
-  - Slight random jitter is applied to the drone render position to make overlapping drones easier to distinguish.
-
-- Connections visualization:
-  - Links are drawn as lines between hub centers. Connection width and color are configurable via `Config` values.
-
-- UI and controls:
-  - A side menu provides simple controls: Start, Backward, Forward, Restart, Exit.
-  - Step counter and map file name are displayed for context.
-
-How visuals help:
-- Color and sprites make hubs and drones immediately identifiable.
-- Animated color modes and jittered positions make congested areas and drone clusters visually apparent.
-- The side menu + step control enable deterministic inspection (replay and step-wise debugging).
-
-# Instructions
+## Quick start
 
 Requirements:
 - Python 3.10+
-- pygame
+- pygame (install with `pip install pygame`)
 
-Quick setup:
-```bash
-make install
-```
-run (example):
+Run the simulator with a map file from the `maps/` directory:
 
 ```bash
-python main.py map_config.txt
+python main.py maps/simple_fork.txt
 ```
 
-## Input
+Controls:
+- Use the side menu (or keyboard): Arrow keys to navigate, `Enter` to
+	activate a button.
+- Menu options: `Start`, `Backward`, `Forward`, `Restart`, `Exit`.
+- Press `q` to quit at any time.
 
-Example `map_config.txt`:
+## Map file format
 
-```text
-nb_drones: 2
+Map files are plain text. Each meaningful line uses the form `key: value`.
+Supported entries:
 
-start_hub: start 0 0 [color=green]
-end_hub: goal 2 0 [color=red]
+- `nb_drones: N` — number of drones to simulate (must appear before hubs).
+- `start_hub: NAME X Y [metadata]` — define the start hub.
+- `hub: NAME X Y [metadata]` — define a regular hub.
+- `end_hub: NAME X Y [metadata]` — define the end hub.
+- `connection: A-B [max_link_capacity=K]` — connect hub `A` and `B`.
 
-connection: start-goal [max_link_capacity=2]
+Metadata for hubs (optional, placed inside square brackets):
+- `color=COLOR` — pygame color name or `rainbow` for cycling colors.
+- `zone=restricted|normal|blocked|priority` — affects traversal cost.
+- `max_drones=K` — maximum drones allowed concurrently in that hub.
+
+Example map snippet:
 
 ```
-## Output
-
-The simulation outputs the drones positions at each move.
-
-### Text Output Example
-
-```text
-D1-roof1 D2-corridorA
-D1-roof2 D2-tunnelB
-D1-goal D2-goal
+nb_drones: 3
+start_hub: S 0 0 [color=green]
+hub: A 10 0
+hub: B 20 0 [zone=restricted max_drones=1]
+end_hub: E 30 0
+connection: S-A
+connection: A-B [max_link_capacity=1]
+connection: B-E
 ```
 
-Where:
+See the included `maps/` directory for full example maps and edge cases.
 
-* `D1` and `D2` are drone identifiers
-* The text after `-` is the hub occupied by the drone
-* Each line represents a simulation step
+## Project layout
 
+- `main.py` — program entry point and basic argument handling.
+- `parser.py` — parses map files and validates configuration.
+- `models.py` — `Hub`, `Connection`, `MapData`, and `Drone` data classes.
+- `algo.py` — `Simulator` logic: graph building, path selection, and
+	simulation stepping.
+- `display.py` — Pygame-based rendering and UI loop.
+- `interface.py` — menu and UI component layout.
+- `maps/` — example map files used for testing and demonstration.
 
-### Visual Representation (Pygame)
-
-In addition to text output, the simulation is displayed visually in a graph-based view using Pygame.
-
-
-# Resources
-
-Relevant references and documentation:
-- pygame documentation: https://www.pygame.org/docs/
-- Graph Traversals tutorial: https://www.youtube.com/watch?v=pcKY4hjDrxk
-- Edge List, Adjacency Matrix, Adjacency List, etc: https://www.youtube.com/watch?v=4jyESQDrpls&t=1592s
-
-AI usage disclosure:
-- An AI assistant (GPT-based) was used to help annotate the code with PEP 257 Google-style docstrings across the project files, and to draft this README. The AI assisted with documentation and refactoring tasks only — no production logic changes were introduced by the assistant unless explicitly requested.
-
-# Where to look in the code
-
-- Parser: `parser.py` — file format parsing and validation.
-- Data models: `models.py` — `Hub`, `Connection`, `MapData`, `Drone`.
-- Core algorithm / simulation: `algo.py` — `Simulator` (graph building, path computation, simulation steps).
-- Visualization and UI: `display.py`, `interface.py` — pygame rendering and menu components.
-- Configuration constants: `enums.py`.
+## Troubleshooting
+- If the program exits with parsing errors, check the indicated map file
+	and line for formatting issues (missing fields, invalid numbers, or
+	unknown metadata values).
+- Ensure `assets/` contains `font.ttf`, `hub.png` and `drone.png` used by
+	the renderer.
